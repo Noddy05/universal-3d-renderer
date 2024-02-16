@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics.Metrics;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using OpenTK.Graphics.OpenGL;
@@ -8,9 +9,9 @@ namespace _3D_Renderer._Import
 {
     internal class TextureLoader
     {
-        //AI generated, using OpenChat AI
-
-        public static int LoadTexture(string filePath)
+        
+        public static int LoadTexture(string filePath) 
+            //AI generated, using ChatGPT
         {
             if (!File.Exists(filePath))
             {
@@ -40,6 +41,20 @@ namespace _3D_Renderer._Import
 
             return textureId;
         }
+
+        /// <summary>
+        /// Array <paramref name="filePaths"/> must be in this specific order:<br></br>
+        /// 0) Right Face, <br></br>
+        /// 1) Left Face, <br></br>
+        /// 2) Top Face, <br></br>
+        /// 3) Bottom Face, <br></br>
+        /// 4) Forward Face, <br></br>
+        /// 5) Backward Face,
+        /// </summary>
+        /// <param name="filePaths"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        /// <exception cref="FileNotFoundException"></exception>
         public static int LoadCubemap(string[] filePaths)
         {
             if (filePaths.Length != 6)
@@ -64,24 +79,24 @@ namespace _3D_Renderer._Import
                 GL.TexParameter(TextureTarget.TextureCubeMap, 
                     TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
                 GL.TexParameter(TextureTarget.TextureCubeMap, 
-                    TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+                    TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
                 GL.TexParameter(TextureTarget.TextureCubeMap,
-                    TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+                    TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
                 GL.TexParameter(TextureTarget.TextureCubeMap,
-                    TextureParameterName.TextureWrapR, (int)TextureWrapMode.Repeat);
+                    TextureParameterName.TextureWrapR, (int)TextureWrapMode.ClampToEdge);
 
                 // Load the texture data into OpenGL
                 GL.TexImage2D(TextureTarget.TextureCubeMapPositiveX + i, 
                     0, PixelInternalFormat.Rgba, width, height, 0,
                     PixelFormat.Bgra, PixelType.UnsignedByte, imageData);
-
             }
             return textureId;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability",
         "CA1416:Validate platform compatibility", Justification = "<Pending>")]
-        public static byte[] LoadImageData(string filePath, out int width, out int height)
+        public static byte[] LoadImageData(string filePath, out int width, out int height) 
+            //AI generated, using ChatGPT
         {
             // Use System.Drawing.Bitmap to load the image and get the width and height
             using Bitmap bitmap = new(filePath);

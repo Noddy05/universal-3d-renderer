@@ -32,13 +32,30 @@ namespace _3D_Renderer._Renderable
 
         public void SetVertices(Vertex[] vertices, BufferUsageHint hint)
         {
-            VBO vbo = new VBO(Vertex.VertexToFloatArray(vertices), hint);
+            VBO vbo = new VBO(vertices, hint);
             Vertex.BindVAO(vbo, vao);
+            GL.BindVertexArray(0);
+            vbo.Dispose();
         }
         public void SetIndices(int[] indices, BufferUsageHint hint)
         {
             this.indices = indices.Length;
+            if(ibo != null)
+            {
+                ibo.Dispose();
+            }
             ibo = new IBO(indices, hint);
+        }
+        public void FlipFaces()
+        {
+            int[] indices = ibo.GetIndices();
+            for(int i = 0; i < indices.Length; i += 3)
+            {
+                int temp = indices[i];
+                indices[i] = indices[i + 1];
+                indices[i + 1] = temp;
+            }
+            SetIndices(indices, BufferUsageHint.StaticCopy);
         }
     }
 }

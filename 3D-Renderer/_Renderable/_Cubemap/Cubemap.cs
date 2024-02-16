@@ -9,31 +9,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace _3D_Renderer._Renderable._UIElement
+namespace _3D_Renderer._Renderable._Cubemap
 {
-    internal class UIElement : Renderable
+    internal class Cubemap : Renderable
     {
-        public string name;
-        public UITransform transform;
+        public string name = "";
         private Mesh mesh;
         private Material material;
 
-        private int UL_transformationMatrix = -1;
         private int UL_projectionMatrix = -1;
         private int UL_cameraMatrix = -1;
 
         public void SetMaterial(Material material)
         {
             this.material = material;
-            UL_transformationMatrix = GL.GetUniformLocation(material.shader, "transformationMatrix");
             UL_projectionMatrix = GL.GetUniformLocation(material.shader, "projectionMatrix");
             UL_cameraMatrix = GL.GetUniformLocation(material.shader, "cameraMatrix");
         }
 
-        public UIElement()
+        public Cubemap()
         {
-            transform = new UITransform();
-            mesh = MeshGeneration.Quad();
+            mesh = MeshGeneration.SmoothCube();
+            mesh.FlipFaces();
         }
 
         //For rendering: (returns number of indices)
@@ -42,15 +39,12 @@ namespace _3D_Renderer._Renderable._UIElement
             //Bind material, mesh and transformation matrix
             material.ApplyMaterial();
             mesh.Bind();
-            Matrix4 transformationMatrix = transform.TransformationMatrix();
-            GL.UniformMatrix4(UL_transformationMatrix, false, ref transformationMatrix);
 
             //Bind camera and projection matrix
             Matrix4 camMatrix = cameraMatrix;
             Matrix4 projMatrix = projectionMatrix;
             GL.UniformMatrix4(UL_cameraMatrix, false, ref camMatrix);
             GL.UniformMatrix4(UL_projectionMatrix, false, ref projMatrix);
-
             return mesh.IndicesCount();
         }
     }

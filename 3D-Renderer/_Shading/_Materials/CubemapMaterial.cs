@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace _3D_Renderer._Shading._Materials
 {
-    internal class Diffuse : Material
+    internal class CubemapMaterial : Material
     {
         public int textureHandle = -1;
         private int UL_textureSampler = -1;
 
-        public Diffuse(int textureHandle)
-            : base(new Shader(@"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_vertex_shader.vert",
-                @"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_fragment_shader.frag"))
+        public CubemapMaterial(int textureHandle)
+            : base(new Shader(@"../../../_Assets/_Built-In/_Shaders/_Cubemap/cubemap.vert",
+                @"../../../_Assets/_Built-In/_Shaders/_Cubemap/cubemap.frag"))
         {
             this.textureHandle = textureHandle;
             UL_textureSampler = GL.GetUniformLocation(shader, "textureSampler");
@@ -27,14 +27,7 @@ namespace _3D_Renderer._Shading._Materials
             //Bind texture handle:
             GL.Uniform1(UL_textureSampler, 0);
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, textureHandle);
-
-            //Bind normal map:
-            /*
-            GL.Uniform1(UL_normalSampler, 1);
-            GL.ActiveTexture(TextureUnit.Texture1);
-            GL.BindTexture(TextureTarget.Texture2D, normalMapHandle);
-            */
+            GL.BindTexture(TextureTarget.TextureCubeMap, textureHandle);
         }
     }
 }

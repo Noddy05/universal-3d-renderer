@@ -1,10 +1,14 @@
-﻿using OpenTK.Graphics.OpenGL;
+﻿using _3D_Renderer._Behaviour;
+using _3D_Renderer._Shading;
+using OpenTK.Graphics.OpenGL;
 
 namespace _3D_Renderer._Renderable
 {
-    internal class VAO
+    internal class VAO : EasyUnload
     {
         private int handle = -1;
+        private Vertex[] vertices;
+        public Vertex[] GetVertices() => vertices;
         public int GetHandle() => handle;
 
         //Automatically returns handle when casting to int:
@@ -15,18 +19,40 @@ namespace _3D_Renderer._Renderable
             handle = GL.GenVertexArray();
         }
 
-        public void Bind(int vboHandle, int index, int size, 
+        public void Bind(VBO vbo, int index, int size, 
             int stride, int offset)
         {
+            Vertex[]? verts = vbo.GetVertices();
+            if (verts == null)
+                throw new Exception("Trying to bind VBO to VAO failed! (VBO.GetVertices() returned null)");
+            vertices = verts!;
+
             GL.BindVertexArray(handle);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vboHandle);
-            GL.VertexAttribPointer(index, size, VertexAttribPointerType.Float, false, stride * sizeof(float),
-                offset * sizeof(float));
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.VertexAttribPointer(index, size, VertexAttribPointerType.Float, false, 
+                stride * sizeof(float), offset * sizeof(float));
             GL.EnableVertexAttribArray(index);
 
             //Unbind VAO and VBO
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        }
+
+        private bool disposed = false;
+        /// <summary>
+        /// Disposes the <see cref="VAO"/> object.<br/>
+        /// </summary>
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            if (disposed)
+                return;
+
+            GL.BindVertexArray(0);
+            GL.DeleteVertexArray(this);
+
+            disposed = true;
         }
     }
 }

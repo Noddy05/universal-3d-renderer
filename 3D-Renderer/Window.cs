@@ -14,6 +14,9 @@ using _3D_Renderer._Shading._Materials;
 using _3D_Renderer._Statistics;
 using _3D_Renderer._Renderable._UIElement;
 using System.Security.Cryptography;
+using _3D_Renderer._Generation;
+using _3D_Renderer._Renderable._Cubemap;
+using _3D_Renderer._Behaviour;
 
 namespace _3D_Renderer
 {
@@ -39,6 +42,7 @@ namespace _3D_Renderer
         private Camera camera;
         private Matrix4 perspectiveMatrix;
 
+        private Collection background = new Collection();
         private Collection scene = new Collection();
         private Collection canvas = new Collection();
         private Renderer defaultRenderer;
@@ -47,15 +51,12 @@ namespace _3D_Renderer
         protected override void OnLoad()
         {
             GL.ClearColor(Color.PeachPuff);
-            GL.Enable(EnableCap.DepthTest);
             GL.CullFace(CullFaceMode.Back);
             GL.Enable(EnableCap.CullFace);
 
             GeneratePerspectiveMatrix();
 
             suzanneMesh = MeshLoader.Load(@"../../../_Assets/_Debug/suzanne_normals.obj");
-            shader = new Shader(@"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_vertex_shader.vert",
-                @"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_fragment_shader.frag");
 
             textureHandle = TextureLoader.LoadTexture(@"../../../_Assets/_Debug/color-test.png");
             defaultTextureHandle = TextureLoader.LoadTexture(@"../../../_Assets/_Debug/WhitePixel.png");
@@ -78,7 +79,7 @@ namespace _3D_Renderer
         {
             //Populating scene:
             GameObject gameObject = new GameObject();
-            Material material = new Diffuse(shader, textureHandle);
+            Material material = new Diffuse(textureHandle);
             gameObject.SetMaterial(material);
             gameObject.mesh = suzanneMesh;
             gameObject.name = "First GameObject!";
@@ -87,7 +88,7 @@ namespace _3D_Renderer
 
             //Random heads:
             Random rand = new Random();
-            for (int i = 0; i < 500; i++)
+            for (int i = 0; i < 5000; i++)
             {
                 gameObject.transform.size = Vector3.One * (0.05f +
                     MathF.Pow((float)rand.NextDouble(), 1.4f) * 1.95f);
@@ -95,18 +96,28 @@ namespace _3D_Renderer
                 float theta = (float)rand.NextDouble() * 2 * MathF.PI;
                 float height = (float)rand.NextDouble() * 2 - 1f;
                 gameObject.transform.position = new Vector3(MathF.Cos(theta),
-                    height, MathF.Sin(theta)) * (20 + (float)rand.NextDouble());
+                    height, MathF.Sin(theta)) * (25 + (float)rand.NextDouble() * 5);
                 gameObject.transform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
 
                 scene.renderables.Add(gameObject.Clone());
             }
 
+            //Skybox:
+            Cubemap cubemap = new Cubemap();
+            int cubemapTextureHandle = TextureLoader.LoadCubemap([
+                @"../../../_Assets/_Built-In/_Skybox/right.png",
+                @"../../../_Assets/_Built-In/_Skybox/left.png",
+                @"../../../_Assets/_Built-In/_Skybox/top.png",
+                @"../../../_Assets/_Built-In/_Skybox/bottom.png",
+                @"../../../_Assets/_Built-In/_Skybox/front.png",
+                @"../../../_Assets/_Built-In/_Skybox/back.png",
+                ]);
+            Material skybox = new CubemapMaterial(cubemapTextureHandle);
+            cubemap.SetMaterial(skybox);
+            background.renderables.Add(cubemap);
+
             //UI:
-            Shader uiShader = new Shader(
-                @"../../../_Assets/_Built-In/_Shaders/_UI/ui_element.vert",
-                @"../../../_Assets/_Built-In/_Shaders/_UI/ui_element.frag"
-                );
-            Material uiMaterial = new UIMaterial(uiShader, Color4.White, textureHandle);
+            Material uiMaterial = new UIMaterial(Color4.White, textureHandle);
 
             UIElement uiElement = new UIElement();
             uiElement.SetMaterial(uiMaterial);
@@ -139,6 +150,17 @@ namespace _3D_Renderer
 
         protected override void OnUnload()
         {
+            //Cleanup:
+            //Dispose shaders, VAO, IBO
+
+            //Dispose of all EasyUnload objects:
+            EasyUnload[] freezeFrame = EasyUnload.GetInstancedObjects().ToArray();
+            foreach (EasyUnload objectToUnload in freezeFrame)
+            {
+                if (objectToUnload.DisposeObject())
+                    Console.WriteLine($"Unloaded object {objectToUnload.GetType()} : EasyUnload");
+            }
+
             base.OnUnload();
         }
 
@@ -147,10 +169,18 @@ namespace _3D_Renderer
         {
             timeSinceStartup += args.Time;
 
-            //Render scene:
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            //Render scene:
+            GL.Disable(EnableCap.DepthTest);
+            defaultRenderer.RenderCollection(background, perspectiveMatrix, camera.RotationMatrix());
+
+            GL.Enable(EnableCap.DepthTest);
             defaultRenderer.RenderCollection(scene, perspectiveMatrix, camera.CameraMatrix());
-            uiRenderer.RenderCollection(canvas, perspectiveMatrix, camera.CameraMatrix());
+
+            //Render UI canvas:
+            GL.Disable(EnableCap.DepthTest);
+            uiRenderer.RenderCollection(canvas, perspectiveMatrix, Matrix4.Identity);
+
             SwapBuffers();
 
             base.OnRenderFrame(args);

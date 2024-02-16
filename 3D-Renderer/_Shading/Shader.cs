@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL;
+﻿using _3D_Renderer._Behaviour;
+using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace _3D_Renderer._Shading
 {
-    internal class Shader
+    internal class Shader : EasyUnload
     {
         private int handle = -1;
         public int GetHandle() => handle;
@@ -128,6 +129,22 @@ namespace _3D_Renderer._Shading
             {
                 throw new Exception(outputLog);
             }
+        }
+
+        private bool disposed = false;
+        /// <summary>
+        /// Disposes the <see cref="Shader"/> object.<br/>
+        /// </summary>
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            if (disposed)
+                return;
+
+            GL.DeleteProgram(this);
+
+            disposed = true;
         }
     }
 }

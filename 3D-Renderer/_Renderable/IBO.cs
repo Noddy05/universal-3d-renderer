@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL;
+﻿using _3D_Renderer._Behaviour;
+using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,9 +8,11 @@ using System.Threading.Tasks;
 
 namespace _3D_Renderer._Renderable
 {
-    internal class IBO
+    internal class IBO : EasyUnload
     {
         private int handle = -1;
+        private int[] indices;
+        public int[] GetIndices() => indices;
         public int GetHandle() => handle;
 
         //Automatically returns handle when casting to int:
@@ -17,6 +20,7 @@ namespace _3D_Renderer._Renderable
 
         public IBO(int[] indices, BufferUsageHint bufferUsageHint)
         {
+            this.indices = indices;
             handle = GL.GenBuffer();
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, handle);
@@ -25,6 +29,23 @@ namespace _3D_Renderer._Renderable
 
             //Undbind buffer:
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+        }
+
+        private bool disposed = false;
+        /// <summary>
+        /// Disposes the <see cref="VAO"/> object.<br/>
+        /// </summary>
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            if (disposed)
+                return;
+
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+            GL.DeleteBuffer(this);
+
+            disposed = true;
         }
     }
 }

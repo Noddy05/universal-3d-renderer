@@ -15,9 +15,9 @@ namespace _3D_Renderer._Rendering._Renderers
         public override void RenderCollection(Collection collection, Matrix4 projectionMatrix,
             Matrix4 cameraMatrix)
         {
-            foreach(GameObject gameObject in collection.renderables)
+            foreach(Renderable renderable in collection.renderables)
             {
-                int tris = gameObject.ApplyRenderable(projectionMatrix, cameraMatrix);
+                int tris = renderable.ApplyRenderable(projectionMatrix, cameraMatrix);
                 GL.DrawElements(PrimitiveType.Triangles, tris, 
                     DrawElementsType.UnsignedInt, 0);
 

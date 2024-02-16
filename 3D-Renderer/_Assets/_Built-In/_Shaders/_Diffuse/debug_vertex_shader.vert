@@ -17,6 +17,7 @@ out vec3 vNormal;
 out vec2 vTexCoords;
 
 void main() {
+    //The direction the sun is pointing:
     vec3 lightDirection = normalize(vec3(0, 0, -1));
     vLightDirection = lightDirection;
 

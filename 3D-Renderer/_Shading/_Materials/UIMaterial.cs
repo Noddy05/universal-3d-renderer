@@ -15,8 +15,10 @@ namespace _3D_Renderer._Shading._Materials
         private int UL_textureSampler = -1;
         private int UL_color = -1;
 
-        public UIMaterial(Shader shader, Color4 color, int textureHandle) 
-            : base(shader)
+        public UIMaterial(Color4 color, int textureHandle) 
+            : base(new Shader(
+                @"../../../_Assets/_Built-In/_Shaders/_UI/ui_element.vert",
+                @"../../../_Assets/_Built-In/_Shaders/_UI/ui_element.frag"))
         {
             this.color = color;
             this.textureHandle = textureHandle;
