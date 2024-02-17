@@ -38,11 +38,12 @@ namespace _3D_Renderer._Renderable._GameObject
         }
 
         //For rendering: (returns number of indices)
-        public override int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+        public override int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix,
+            out bool meshIsWireframe)
         {
             //Bind material, mesh and transformation matrix
             material.ApplyMaterial();
-            mesh.Bind();
+            mesh.Bind(out meshIsWireframe);
             Matrix4 transformationMatrix = transform.TransformationMatrix();
             GL.UniformMatrix4(UL_transformationMatrix, false, ref transformationMatrix);
 
@@ -61,7 +62,7 @@ namespace _3D_Renderer._Renderable._GameObject
             obj.transform = new Transform();
             obj.transform.position = transform.position;
             obj.transform.rotation = transform.rotation;
-            obj.transform.size = transform.size;
+            obj.transform.scale = transform.scale;
 
             obj.SetMaterial(material);
             obj.mesh = mesh;

@@ -8,22 +8,24 @@ using System.Threading.Tasks;
 
 namespace _3D_Renderer._Shading._Materials
 {
-    internal class UIMaterial : Material
+    internal class UIText : Material
     {
         public int textureHandle = -1;
         public Color4 color;
         private int UL_textureSampler = -1;
         private int UL_color = -1;
+        private int UL_aspectRatio = -1;
 
-        public UIMaterial(Color4 color, int textureHandle) 
+        public UIText(Color4 color, int textureHandle) 
             : base(new Shader(
-                @"../../../_Assets/_Built-In/_Shaders/_UI/_Textured/ui_element.vert",
-                @"../../../_Assets/_Built-In/_Shaders/_UI/_Textured/ui_element.frag"))
+                @"../../../_Assets/_Built-In/_Shaders/_UI/_Text/text.vert",
+                @"../../../_Assets/_Built-In/_Shaders/_UI/_Text/text.frag"))
         {
             this.color = color;
             this.textureHandle = textureHandle;
             UL_color = GL.GetUniformLocation(shader, "color");
             UL_textureSampler = GL.GetUniformLocation(shader, "textureSampler");
+            UL_aspectRatio = GL.GetUniformLocation(shader, "aspectRatio");
         }
 
         public override void ApplyMaterial()
@@ -37,6 +39,7 @@ namespace _3D_Renderer._Shading._Materials
 
             //Apply color:
             GL.Uniform4(UL_color, color);
+            GL.Uniform1(UL_aspectRatio, Program.window.Size.X / (float)Program.window.Size.Y);
         }
     }
 }

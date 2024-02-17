@@ -22,12 +22,20 @@ namespace _3D_Renderer._Statistics
 
         private int renderCallsMade;
         private int tris;
-        public void RenderCall(int tris)
+        /// <summary>
+        /// For keeping track of how many DrawCalls has been made this frame. Call this every DrawCall.
+        /// </summary>
+        /// <param name="tris"></param>
+        public void NewDrawCall(int tris)
         {
             renderCallsMade++;
             this.tris += tris;
         }
 
+        /// <summary>
+        /// Updates every frame.
+        /// </summary>
+        /// <param name="args"></param>
         private void FrameRendered(FrameEventArgs args)
         {
             deltaTimes.Add((float)args.Time);

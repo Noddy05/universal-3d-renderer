@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace _3D_Renderer._Renderable
 {
-    internal class Renderable : ActiveObject
+    internal abstract class Renderable : ActiveObject
     {
         /// <summary>
         /// Prepares the renderable for the renderer.
@@ -17,7 +17,8 @@ namespace _3D_Renderer._Renderable
         /// <param name="cameraMatrix"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public virtual int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+        public virtual int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix, 
+            out bool meshIsWireframe)
         {
             throw new NotImplementedException();
         }

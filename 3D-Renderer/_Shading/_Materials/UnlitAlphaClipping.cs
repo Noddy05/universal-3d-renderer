@@ -2,23 +2,24 @@
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace _3D_Renderer._Shading._Materials
 {
-    internal class UIMaterial : Material
+    internal class UnlitAlphaClipping : Material
     {
         public int textureHandle = -1;
         public Color4 color;
         private int UL_textureSampler = -1;
         private int UL_color = -1;
 
-        public UIMaterial(Color4 color, int textureHandle) 
-            : base(new Shader(
-                @"../../../_Assets/_Built-In/_Shaders/_UI/_Textured/ui_element.vert",
-                @"../../../_Assets/_Built-In/_Shaders/_UI/_Textured/ui_element.frag"))
+        public UnlitAlphaClipping(Color4 color, int textureHandle)
+            : base(
+                new Shader(@"../../../_Assets/_Built-In/_Shaders/_UnlitAlphaClipping/unlitalphaclip.vert",
+                @"../../../_Assets/_Built-In/_Shaders/_UnlitAlphaClipping/unlitalphaclip.frag"))
         {
             this.color = color;
             this.textureHandle = textureHandle;

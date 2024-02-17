@@ -42,14 +42,20 @@ namespace _3D_Renderer._Shading
         }
 
         /// <summary>
-        /// Next step is to attach shaders using AttachShader(location, shaderType), 
-        /// and finally: FinalizeShader()
+        /// Next step is to attach shaders using <see cref="AttachShader"/>, 
+        /// and finally: <see cref="FinalizeShader"/>
         /// </summary>
         public Shader()
         {
             handle = GL.CreateProgram();
         }
 
+        /// <summary>
+        /// Attaches a shader program of a <see cref="ShaderType"/><br></br>
+        /// Call <see cref="FinalizeShader"/> after you're done attaching all shaders
+        /// </summary>
+        /// <param name="shaderCodeLocation"></param>
+        /// <param name="shaderType"></param>
         public void AttachShader(string shaderCodeLocation, ShaderType shaderType)
         {
             //Read shader code:

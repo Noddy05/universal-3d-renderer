@@ -1,5 +1,6 @@
 ﻿using _3D_Renderer._Generation;
 using _3D_Renderer._Renderable._GameObject;
+using _3D_Renderer._Renderable._UIElement;
 using _3D_Renderer._Shading;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -14,15 +15,18 @@ namespace _3D_Renderer._Renderable._Cubemap
     internal class Cubemap : Renderable
     {
         public string name = "";
+        public Transform transform;
         private Mesh mesh;
         private Material material;
 
+        private int UL_transformationMatrix = -1;
         private int UL_projectionMatrix = -1;
         private int UL_cameraMatrix = -1;
 
         public void SetMaterial(Material material)
         {
             this.material = material;
+            UL_transformationMatrix = GL.GetUniformLocation(material.shader, "transformationMatrix");
             UL_projectionMatrix = GL.GetUniformLocation(material.shader, "projectionMatrix");
             UL_cameraMatrix = GL.GetUniformLocation(material.shader, "cameraMatrix");
         }
@@ -30,15 +34,19 @@ namespace _3D_Renderer._Renderable._Cubemap
         public Cubemap()
         {
             mesh = MeshGeneration.SmoothCube();
+            transform = new Transform();
             mesh.FlipFaces();
         }
 
         //For rendering: (returns number of indices)
-        public override int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+        public override int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix, 
+            out bool meshIsWireframe)
         {
             //Bind material, mesh and transformation matrix
             material.ApplyMaterial();
-            mesh.Bind();
+            mesh.Bind(out meshIsWireframe);
+            Matrix4 transformationMatrix = transform.TransformationMatrix();
+            GL.UniformMatrix4(UL_transformationMatrix, false, ref transformationMatrix);
 
             //Bind camera and projection matrix
             Matrix4 camMatrix = cameraMatrix;

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace _3D_Renderer._Renderable
+namespace _3D_Renderer._BufferObjects
 {
     internal class IBO : EasyUnload
     {
@@ -33,7 +33,7 @@ namespace _3D_Renderer._Renderable
 
         private bool disposed = false;
         /// <summary>
-        /// Disposes the <see cref="VAO"/> object.<br/>
+        /// Disposes the <see cref="IBO"/> object.<br/>
         /// </summary>
         public override void Dispose()
         {

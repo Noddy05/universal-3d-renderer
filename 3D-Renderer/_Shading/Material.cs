@@ -18,6 +18,9 @@ namespace _3D_Renderer._Shading
             this.shader = shader;
         }
 
+        /// <summary>
+        /// Binds shader and others (uniforms...) depends on the Material
+        /// </summary>
         public virtual void ApplyMaterial()
         {
             GL.UseProgram(shader);

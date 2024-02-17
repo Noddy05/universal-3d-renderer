@@ -10,6 +10,8 @@ uniform mat4 projectionMatrix;
 uniform mat4 transformationMatrix;
 uniform mat4 cameraMatrix;
 
+uniform vec4 clippingPlane;
+
 out vec3 vWorldPosition;
 out vec3 vCameraPosition;
 out vec3 vLightDirection;
@@ -17,12 +19,14 @@ out vec3 vNormal;
 out vec2 vTexCoords;
 
 void main() {
+    vec3 worldPosition = (transformationMatrix * vec4(position, 1)).xyz;
+    gl_Position = projectionMatrix * cameraMatrix * vec4(worldPosition, 1);
+
+    gl_ClipDistance[0] = dot(worldPosition, clippingPlane.xyz) + clippingPlane.w;
+
     //The direction the sun is pointing:
     vec3 lightDirection = normalize(vec3(0, 0, -1));
     vLightDirection = lightDirection;
-
-    vec3 worldPosition = (transformationMatrix * vec4(position, 1)).xyz;
-    gl_Position = projectionMatrix * cameraMatrix * vec4(worldPosition, 1);
 
     vCameraPosition = (inverse(cameraMatrix) * vec4(vec3(0), 1.0)).xyz;
     vWorldPosition = worldPosition;

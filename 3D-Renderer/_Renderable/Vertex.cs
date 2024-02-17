@@ -8,6 +8,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Drawing;
 using System.Reflection.Metadata;
 using OpenTK.Graphics.OpenGL;
+using _3D_Renderer._BufferObjects;
 
 namespace _3D_Renderer._Renderable
 {
@@ -60,31 +61,23 @@ namespace _3D_Renderer._Renderable
             return vertexList.ToArray();
         }
 
-        public static void BindVAO(int vboHandle, int vaoHandle)
+        public static void BindVAO(VBO vbo, VAO vao)
         {
-            GL.BindVertexArray(vaoHandle);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vboHandle);
+            GL.BindVertexArray(vao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
 
             int length = 8;
             //For each vertex data struct:
             //Position:
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, length * sizeof(float),
-                0 * sizeof(float));
-            GL.EnableVertexAttribArray(0);
+            vao.Bind(vbo, 0, 3, length, 0, true, false);
 
             //Normal:
-            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, length * sizeof(float),
-                3 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
+            vao.Bind(vbo, 1, 3, length, 3, false, false);
 
             //TexCoordinate:
-            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, length * sizeof(float),
-                6 * sizeof(float));
-            GL.EnableVertexAttribArray(2);
-
-            //Unbind VAO and VBO
-            GL.BindVertexArray(0);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            vao.Bind(vbo, 2, 2, length, 6, false, true);
         }
+
+        public Vertex Copy() => new Vertex(vertexPosition, vertexNormal, textureCoordinate);
     }
 }

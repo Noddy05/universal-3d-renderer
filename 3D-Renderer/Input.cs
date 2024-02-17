@@ -16,6 +16,10 @@ namespace _3D_Renderer
             mouseButtons = new Dictionary<string, MouseButton>();
 
         private static Window window;
+        /// <summary>
+        /// Should be called before attempting to use <see cref="Input"/> buttons.<br></br>
+        /// This initializes the button bindings.
+        /// </summary>
         public static void Initialize()
         {
             window = Program.window;
@@ -35,6 +39,14 @@ namespace _3D_Renderer
             };
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>
+        /// <see cref="Vector2"/>(x, y) direction of the input.<br></br>
+        /// x: -1 if A or Left is pressed | 1 if D or Right is pressed<br></br>
+        /// y: -1 if S or Down is pressed | 1 if W or Up is pressed
+        /// </returns>
         public static Vector2 Movement()
         {
             int x = 0;

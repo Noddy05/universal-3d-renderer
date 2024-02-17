@@ -1,4 +1,5 @@
 ﻿using _3D_Renderer._Behaviour;
+using _3D_Renderer._Renderable;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System;
@@ -7,12 +8,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace _3D_Renderer._Renderable
+namespace _3D_Renderer._BufferObjects
 {
     internal class VBO : EasyUnload
     {
         private int handle = -1;
-        private Vertex[]? vertices;
+        private Vertex[]? vertices = [];
         public Vertex[]? GetVertices() => vertices;
         public int GetHandle() => handle;
 
@@ -26,6 +27,7 @@ namespace _3D_Renderer._Renderable
         /// <param name="bufferUsageHint"></param>
         public VBO(Vertex[] vertices, BufferUsageHint bufferUsageHint)
         {
+            this.vertices = vertices;
             float[] verts = Vertex.VertexToFloatArray(vertices);
 
             handle = GL.GenBuffer();
@@ -35,6 +37,16 @@ namespace _3D_Renderer._Renderable
 
             //Undbind buffer:
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        }
+
+        public static Vertex[] DuplicateVertices(Vertex[] verts)
+        {
+            Vertex[] newArray = new Vertex[verts.Length];
+            for (int i = 0; i < newArray.Length; i++)
+            {
+                newArray[i] = verts[i].Copy();
+            }
+            return newArray;
         }
 
         private bool disposed = false;

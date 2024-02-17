@@ -15,7 +15,7 @@ namespace _3D_Renderer._Renderable._UIElement
     {
         public string name;
         public UITransform transform;
-        private Mesh mesh;
+        public Mesh mesh;
         private Material material;
 
         private int UL_transformationMatrix = -1;
@@ -37,11 +37,12 @@ namespace _3D_Renderer._Renderable._UIElement
         }
 
         //For rendering: (returns number of indices)
-        public override int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+        public override int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix, 
+            out bool meshIsWireframe)
         {
             //Bind material, mesh and transformation matrix
             material.ApplyMaterial();
-            mesh.Bind();
+            mesh.Bind(out meshIsWireframe);
             Matrix4 transformationMatrix = transform.TransformationMatrix();
             GL.UniformMatrix4(UL_transformationMatrix, false, ref transformationMatrix);
 

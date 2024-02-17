@@ -10,17 +10,18 @@ namespace _3D_Renderer._Renderable._GameObject
 {
     internal class Transform
     {
-        public Vector3 position, rotation, size;
+        public Vector3 position, rotation, scale;
 
         public Transform()
         {
-            size = Vector3.One;
+            scale = Vector3.One;
         }
 
         public Matrix4 TransformationMatrix()
-            =>  Matrix4.CreateScale(size) * 
-                Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(
-                rotation)) *
+            => Matrix4.CreateScale(scale) *
+                Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation)) *
                 Matrix4.CreateTranslation(position);
+        public Matrix4 RotationMatrix()
+            => Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
     }
 }
