@@ -39,7 +39,7 @@ namespace _3D_Renderer._BufferObjects
         public void UnbindFramebuffer()
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            Window? gameWindow = Program.window;
+            Window? gameWindow = Program.GetWindow();
             if (gameWindow == null)
                 throw new Exception("No window to render to!");
 

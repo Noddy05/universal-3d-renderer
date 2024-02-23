@@ -14,13 +14,9 @@ uniform float cubemapReflectivity = 0.5;
 uniform float cubemapRefractivity = 0.5;
 uniform float reflectivity = 1;
 uniform float specularHighlightDamper = 15;
+uniform vec4 color;
 
 void main(){
-    float cubemapReflectivity = 0.5;
-    float cubemapRefractivity = 0.5;
-    float reflectivity = 1;
-    float specularHighlightDamper = 15;
-
     vec3 toCamera = vCameraPosition - vWorldPosition;
 
     //mixing between normal and vertex normal:
@@ -49,7 +45,7 @@ void main(){
 
     //Combine texture and color
     vec4 sampledTexture = texture(textureSampler, vTexCoords);
-    vec4 unlitColor = vec4(0.5, 0.4, 0.2, 1.0) 
+    vec4 unlitColor = color 
         * sampledTexture;
     //Make color brightness based off light strength:
     fragmentColor = mix(unlitColor * lightStrengthClamped * lightColor, 

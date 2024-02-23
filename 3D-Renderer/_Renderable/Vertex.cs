@@ -63,9 +63,6 @@ namespace _3D_Renderer._Renderable
 
         public static void BindVAO(VBO vbo, VAO vao)
         {
-            GL.BindVertexArray(vao);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-
             int length = 8;
             //For each vertex data struct:
             //Position:

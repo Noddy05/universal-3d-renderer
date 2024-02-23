@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL;
+﻿using _3D_Renderer._Geometry;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,8 @@ namespace _3D_Renderer._Shading._Materials
         public float cubemapRefractivity = 0.5f;
         public float reflectivity = 1;
         public float specularHighlightDamper = 15;
+        public Color4 color;
+        private int UL_color = -1;
         private int UL_clippingPlane = -1;
         private int UL_textureSampler = -1;
         private int UL_reflectionSampler = -1;
@@ -23,16 +26,18 @@ namespace _3D_Renderer._Shading._Materials
         private int UL_cubemapRefractivity  = -1;
         private int UL_reflectivity         = -1;
         private int UL_specularHighlightDamper = -1;
-        private ClippingPlane clippingPlane;
+        private Plane clippingPlane;
 
-        public Diffuse(int textureHandle, int reflectionCubemapTexture)
+        public Diffuse(int textureHandle, Color4 color, int reflectionCubemapTexture)
             : base(new Shader(@"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_vertex_shader.vert",
                 @"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_fragment_shader.frag"))
         {
-            clippingPlane = new ClippingPlane(Vector3.UnitY, Vector3.Zero);
+            clippingPlane = new Plane(Vector3.Zero, Vector3.Zero);
 
+            this.color = color;
             this.textureHandle = textureHandle;
             reflectionMap = reflectionCubemapTexture;
+            UL_color = GL.GetUniformLocation(shader, "color");
             UL_clippingPlane = GL.GetUniformLocation(shader, "clippingPlane");
             UL_textureSampler = GL.GetUniformLocation(shader, "textureSampler");
             UL_reflectionSampler = GL.GetUniformLocation(shader, "reflectionSampler");
@@ -44,8 +49,11 @@ namespace _3D_Renderer._Shading._Materials
 
         public override void ApplyMaterial()
         {
+            /*
             clippingPlane.SetPointInPlane(Vector3.UnitY 
                 * MathF.Sin((float)Program.window.timeSinceStartup));
+                * */
+            clippingPlane.SetNormal(Vector3.Zero); //Disables clipping plane
 
             base.ApplyMaterial();
 
@@ -59,12 +67,13 @@ namespace _3D_Renderer._Shading._Materials
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.TextureCubeMap, reflectionMap);
 
+            GL.Uniform4(UL_color, color);
             GL.Uniform1(UL_cubemapReflectivity, cubemapReflectivity);
             GL.Uniform1(UL_cubemapRefractivity, cubemapRefractivity);
             GL.Uniform1(UL_reflectivity, reflectivity);
             GL.Uniform1(UL_specularHighlightDamper, specularHighlightDamper);
 
-            clippingPlane.ApplyClippingPlane(UL_clippingPlane);
+            clippingPlane.ApplyAsClippingPlane(UL_clippingPlane);
         }
     }
 }

@@ -6,15 +6,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace _3D_Renderer._Shading
+namespace _3D_Renderer._Geometry
 {
-    internal class ClippingPlane
+    internal class Plane
     {
         private Vector3 normal;
         private Vector3 pointInPlane;
         private float d;
 
-        public ClippingPlane(Vector3 normal, Vector3 pointInPlane)
+        public Plane(Vector3 normal, Vector3 pointInPlane)
         {
             this.pointInPlane = pointInPlane;
             SetNormal(normal);
@@ -22,18 +22,23 @@ namespace _3D_Renderer._Shading
 
         public void SetNormal(Vector3 normal)
         {
-            this.normal = normal;
-            d = -Vector3.Dot(pointInPlane, normal);
+            this.normal = normal.Normalized();
+            d = -Vector3.Dot(pointInPlane, this.normal);
         }
         public void SetPointInPlane(Vector3 pointInPlane)
         {
             this.pointInPlane = pointInPlane;
             d = -Vector3.Dot(pointInPlane, normal);
         }
-        public void ApplyClippingPlane(int UL_clippingPlaneLocation)
+        public void ApplyAsClippingPlane(int UL_clippingPlaneLocation)
         {
             Vector4 planeEquation = new Vector4(normal, d);
             GL.Uniform4(UL_clippingPlaneLocation, planeEquation);
         }
+
+        //https://mathinsight.org/distance_point_plane
+        //This requires the normal to be normalized
+        public float SignedDistance(Vector3 point)
+            => Vector3.Dot(normal, point) + d;
     }
 }

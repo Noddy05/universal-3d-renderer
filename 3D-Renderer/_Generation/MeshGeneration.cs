@@ -119,6 +119,35 @@ namespace _3D_Renderer._Generation
         #endregion
 
         #region Complex Generations
+        public static Mesh Circle(int vertices)
+        {
+            //TODO add indices:
+
+            if (vertices < 3)
+                throw new Exception("Trying to generate circle mesh failed! " +
+                    "(MeshGeneration.CircleMesh(a) requires a ≥ 3)");
+
+            Mesh circle = new Mesh();
+
+            Vertex[] verts = new Vertex[vertices];
+            #region Vertices
+            for (int i = 0; i < vertices; i++)
+            {
+                float px = i / (float)vertices * 2 * MathF.PI;
+                Vector3 pos = new Vector3(MathF.Cos(px), 0, MathF.Sin(px));
+                verts[i] = new Vertex(pos, new Vector3(0, 1, 0), 
+                    new Vector2(pos.X, pos.Z));
+            }
+            #endregion
+            #region Indices
+
+            #endregion
+            circle.SetVertices(verts, BufferUsageHint.StaticCopy);
+            //circle.SetIndices(indices, BufferUsageHint.StaticCopy);
+
+            return circle;
+        }
+
         public static Mesh Plane(int xDivisions, int yDivisions)
         {
             if(xDivisions < 0 || yDivisions < 0)
@@ -128,9 +157,8 @@ namespace _3D_Renderer._Generation
             Mesh plane = new Mesh();
 
             Vertex[] vertices = new Vertex[(xDivisions + 2) * (yDivisions + 2)];
-            int[] triangles = new int[(xDivisions + 1) * (yDivisions + 1) * 6];
+            int[] indices = new int[(xDivisions + 1) * (yDivisions + 1) * 6];
             #region Vertices
-            Random rand = new Random();
             for (int y = 0; y < yDivisions + 2; y++)
             {
                 for (int x = 0; x < xDivisions + 2; x++)
@@ -138,7 +166,7 @@ namespace _3D_Renderer._Generation
                     float vx = x / (float)(xDivisions + 1) - 0.5f;
                     float vy = y / (float)(yDivisions + 1) - 0.5f;
                     vertices[x + (xDivisions + 2) * y] = new Vertex(
-                        new Vector3(vx, (float)rand.NextDouble(), vy),
+                        new Vector3(vx, 0, vy),
                         new Vector3(0, 1, 0), new Vector2(vx, vy));
                 }
             }
@@ -148,17 +176,17 @@ namespace _3D_Renderer._Generation
             {
                 for (int x = 0; x < xDivisions + 1; x++)
                 {
-                    triangles[(x + (xDivisions + 1) * y) * 6    ] = x     + (xDivisions + 2) * y;
-                    triangles[(x + (xDivisions + 1) * y) * 6 + 1] = x     + (xDivisions + 2) * (y + 1);
-                    triangles[(x + (xDivisions + 1) * y) * 6 + 2] = 1 + x + (xDivisions + 2) * y;
-                    triangles[(x + (xDivisions + 1) * y) * 6 + 3] = 1 + x + (xDivisions + 2) * y;
-                    triangles[(x + (xDivisions + 1) * y) * 6 + 4] = x     + (xDivisions + 2) * (y + 1);
-                    triangles[(x + (xDivisions + 1) * y) * 6 + 5] = 1 + x + (xDivisions + 2) * (y + 1);
+                    indices[(x + (xDivisions + 1) * y) * 6    ] = x     + (xDivisions + 2) * y;
+                    indices[(x + (xDivisions + 1) * y) * 6 + 1] = x     + (xDivisions + 2) * (y + 1);
+                    indices[(x + (xDivisions + 1) * y) * 6 + 2] = 1 + x + (xDivisions + 2) * y;
+                    indices[(x + (xDivisions + 1) * y) * 6 + 3] = 1 + x + (xDivisions + 2) * y;
+                    indices[(x + (xDivisions + 1) * y) * 6 + 4] = x     + (xDivisions + 2) * (y + 1);
+                    indices[(x + (xDivisions + 1) * y) * 6 + 5] = 1 + x + (xDivisions + 2) * (y + 1);
                 }
             }
             #endregion
             plane.SetVertices(vertices, BufferUsageHint.StaticCopy);
-            plane.SetIndices(triangles, BufferUsageHint.StaticCopy);
+            plane.SetIndices(indices, BufferUsageHint.StaticCopy);
 
             return plane;
         }

@@ -13,11 +13,6 @@ namespace _3D_Renderer._Renderable._UIElement
 {
     internal class UIElement : Renderable
     {
-        public string name;
-        public UITransform transform;
-        public Mesh mesh;
-        private Material material;
-
         private int UL_transformationMatrix = -1;
         private int UL_projectionMatrix = -1;
         private int UL_cameraMatrix = -1;
@@ -31,18 +26,17 @@ namespace _3D_Renderer._Renderable._UIElement
         }
 
         public UIElement()
+            : base(new UITransform())
         {
-            transform = new UITransform();
             mesh = MeshGeneration.Quad();
         }
 
         //For rendering: (returns number of indices)
-        public override int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix, 
-            out bool meshIsWireframe)
+        public override int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix)
         {
             //Bind material, mesh and transformation matrix
             material.ApplyMaterial();
-            mesh.Bind(out meshIsWireframe);
+            mesh.Bind();
             Matrix4 transformationMatrix = transform.TransformationMatrix();
             GL.UniformMatrix4(UL_transformationMatrix, false, ref transformationMatrix);
 

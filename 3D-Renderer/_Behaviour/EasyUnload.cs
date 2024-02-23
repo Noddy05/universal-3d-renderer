@@ -10,15 +10,6 @@ namespace _3D_Renderer._Behaviour
     internal abstract class EasyUnload : IDisposable
     {
         private static List<EasyUnload> instancedObjects = new List<EasyUnload>();
-        public bool DisposeObject()
-        {
-            if (!instancedObjects.Contains(this))
-                return false;
-
-            Dispose();
-            instancedObjects.Remove(this);
-            return true;
-        }
 
         public static List<EasyUnload> GetInstancedObjects() => instancedObjects;
 
@@ -29,8 +20,9 @@ namespace _3D_Renderer._Behaviour
 
         public virtual void Dispose()
         {
-            if (instancedObjects.Contains(this))
-                instancedObjects.Remove(this);
+            if (!instancedObjects.Contains(this))
+                return;
+            instancedObjects.Remove(this);
         }
 
         //Dispose template:

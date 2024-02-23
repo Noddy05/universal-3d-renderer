@@ -15,16 +15,11 @@ namespace _3D_Renderer._Renderable._GameObject
     /// </summary>
     internal class GameObject : Renderable
     {
-        public string name;
-        public Transform transform;
-        public Mesh mesh;
-        private Material material;
-
         private int UL_transformationMatrix = -1;
         private int UL_projectionMatrix = -1;
         private int UL_cameraMatrix = -1;
 
-        public void SetMaterial(Material material)
+        public override void SetMaterial(Material material)
         {
             this.material = material;
             UL_transformationMatrix = GL.GetUniformLocation(material.shader, "transformationMatrix");
@@ -33,17 +28,29 @@ namespace _3D_Renderer._Renderable._GameObject
         }
 
         public GameObject()
+            :base(new Transform())
         {
-            transform = new Transform();
+
         }
 
         //For rendering: (returns number of indices)
-        public override int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix,
-            out bool meshIsWireframe)
+        public override int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix)
         {
+            if(mesh == null)
+            {
+                return 0;
+            }
+
             //Bind material, mesh and transformation matrix
-            material.ApplyMaterial();
-            mesh.Bind(out meshIsWireframe);
+            if(material == null)
+            {
+                Program.GetWindow().GetDefaultMaterial().ApplyMaterial();
+            } 
+            else
+            {
+                material.ApplyMaterial();
+            }
+            mesh.Bind();
             Matrix4 transformationMatrix = transform.TransformationMatrix();
             GL.UniformMatrix4(UL_transformationMatrix, false, ref transformationMatrix);
 
@@ -65,7 +72,7 @@ namespace _3D_Renderer._Renderable._GameObject
             obj.transform.scale = transform.scale;
 
             obj.SetMaterial(material);
-            obj.mesh = mesh;
+            obj.SetMesh(mesh!);
             obj.name = name + " (Clone)";
 
             return obj;

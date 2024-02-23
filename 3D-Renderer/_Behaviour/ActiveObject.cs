@@ -7,7 +7,7 @@ namespace _3D_Renderer._Behaviour
         private Window window;
 
         public ActiveObject() {
-            window = Program.window;
+            window = Program.GetWindow();
             window.RenderFrame += Update;
         }
 

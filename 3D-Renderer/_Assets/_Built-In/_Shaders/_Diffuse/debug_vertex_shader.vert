@@ -22,7 +22,7 @@ void main() {
     vec3 worldPosition = (transformationMatrix * vec4(position, 1)).xyz;
     gl_Position = projectionMatrix * cameraMatrix * vec4(worldPosition, 1);
 
-    gl_ClipDistance[0] = dot(worldPosition, clippingPlane.xyz) + clippingPlane.w;
+    //gl_ClipDistance[0] = dot(worldPosition, clippingPlane.xyz) + clippingPlane.w;
 
     //The direction the sun is pointing:
     vec3 lightDirection = normalize(vec3(0, 0, -1));

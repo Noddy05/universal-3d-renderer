@@ -22,7 +22,7 @@ namespace _3D_Renderer
         /// </summary>
         public static void Initialize()
         {
-            window = Program.window;
+            window = Program.GetWindow();
             InitializeButtons();
         }
 

@@ -1,15 +1,28 @@
 ﻿using _3D_Renderer._Behaviour;
+using _3D_Renderer._Geometry;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace _3D_Renderer._Camera
 {
-    internal class Camera : ActiveObject
+    internal abstract class Camera : ActiveObject
     {
+        protected Matrix4 projectionMatrix = Matrix4.Identity;
+        public Matrix4 GetProjectionMatrix() => projectionMatrix;
+
+        protected Window window;
+
+        /// <summary>
+        /// This should be called everytime the window is resized, this updates the perspective matrix
+        /// to fit with the new aspect ratio.
+        /// </summary>
+        public virtual void GenerateProjectionMatrix() => new NotImplementedException();
+
         protected Vector3 position;
         public Vector3 Position() => position;
         protected Vector3 rotation;
@@ -19,15 +32,19 @@ namespace _3D_Renderer._Camera
         {
             this.position = position;
             this.rotation = rotation;
+            window = Program.GetWindow();
         }
         public Camera()
         {
+            window = Program.GetWindow();
         }
 
         public Matrix4 CameraMatrix() =>
             Matrix4.CreateTranslation(position)
             * Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
-        public Matrix4 RotationMatrix() => 
+        public Matrix4 RotationMatrix() =>
             Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
+        public Matrix4 PositionMatrix() =>
+            Matrix4.CreateTranslation(position);
     }
 }

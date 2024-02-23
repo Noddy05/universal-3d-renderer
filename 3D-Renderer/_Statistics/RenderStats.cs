@@ -11,11 +11,14 @@ namespace _3D_Renderer._Statistics
     {
         private Window window;
         private string originalTitle;
+        private List<(float secondsIn, float time)> deltaTimesDated =
+            new List<(float secondsIn, float time)>();
         private List<float> deltaTimes = new List<float>();
-        private int removeAfterNFrames = 5000;
+        private int removeAfterNSeconds = 5;
+        private int removeAfterNFrames = 25;
 
         public RenderStats() {
-            window = Program.window;
+            window = Program.GetWindow();
             originalTitle = window.Title;
             window.RenderFrame += FrameRendered;
         }
@@ -38,28 +41,42 @@ namespace _3D_Renderer._Statistics
         /// <param name="args"></param>
         private void FrameRendered(FrameEventArgs args)
         {
+            deltaTimesDated.Add(((float)window.timeSinceStartup, (float)args.Time));
             deltaTimes.Add((float)args.Time);
-            if (deltaTimes.Count > removeAfterNFrames)
+            while ((float)window.timeSinceStartup - deltaTimesDated[0].secondsIn >= removeAfterNSeconds)
+            {
+                deltaTimesDated.RemoveAt(0);
+            }
+            while (deltaTimes.Count >= removeAfterNFrames)
             {
                 deltaTimes.RemoveAt(0);
             }
             float average = 0;
             float peak = float.MinValue;
             float minimum = float.MaxValue;
-            for(int i = 0; i < deltaTimes.Count; i++)
+            for(int i = 0; i < deltaTimesDated.Count; i++)
             {
-                float fps = 1f / deltaTimes[i];
-                average += fps / deltaTimes.Count;
+                float fps = 1f / deltaTimesDated[i].time;
+                average += fps / deltaTimesDated.Count;
                 if (fps > peak)
                     peak = fps;
                 if (fps < minimum)
                     minimum = fps;
             }
+            float averageLastNFrames = 0;
+            for (int i = 0; i < deltaTimes.Count; i++)
+            {
+                float fps = 1f / deltaTimes[i];
+                averageLastNFrames += fps / deltaTimes.Count;
+            }
 
             window.Title = $"{originalTitle}\t|\tFPS: " + 
-                $"{MathF.Round(average, 1).ToString("N1")}\t Peak: {MathF.Round(peak, 1).ToString("N1")}" +
+                $"{MathF.Round(averageLastNFrames, 1).ToString("N1")} | " +
+                $"{MathF.Round(average, 1).ToString("N1")}\t " +
+                $"Peak: {MathF.Round(peak, 1).ToString("N1")}" +
                 $"\t Low: {MathF.Round(minimum, 1).ToString("N1")}" + 
-                $"\t|\tRender calls: {renderCallsMade.ToString("N0")}\tIndices: {tris.ToString("N0")}" +
+                $"\t|\tDraw calls: {renderCallsMade.ToString("N0")}\tIndices: " +
+                $"{(tris / 3).ToString("N0")}" +
                 $"\t";
 
             tris = 0;

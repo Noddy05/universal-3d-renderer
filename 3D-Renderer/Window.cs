@@ -20,6 +20,12 @@ using _3D_Renderer._BufferObjects;
 
 namespace _3D_Renderer
 {
+    /* To clean up:
+     * InstanceMethods are temporary classes, should be rewritten
+     * UBO should be rewritten to not lose generality
+     * Cleanup in how vao modifications are done 
+    */
+
     /// <summary>
     /// The window will contain all the visual information the user will receive
     /// </summary>
@@ -38,23 +44,30 @@ namespace _3D_Renderer
                 Title = "Game Window"
             })
         {
-
+            CenterWindow();
         }
+
         public RenderStats renderStats;
-
-        public int defaultTextureHandle = -1;
+        private int defaultTextureHandle = -1;
+        public int GetDefaultTextureHandle() => defaultTextureHandle;
         private Camera camera;
-        private Matrix4 perspectiveMatrix;
+        private Material defaultMaterial;
+        public Material GetDefaultMaterial() => defaultMaterial;
+        //Renderers
+        private Renderer defaultRenderer;
+        private UIRenderer uiRenderer;
+        private InstancedRenderer instancedRenderer;
 
-        //For rendering
+        //Temp:
+        private FBO sceneFBO;
+        private int fboOutputTexture;
+        private int cmuSerifHandle;
         private Collection background = new Collection();
         private Collection scene = new Collection();
         private Collection canvas = new Collection();
-        private Renderer defaultRenderer;
-        private UIRenderer uiRenderer;
-        private int cmuSerifHandle;
-        private FBO sceneFBO;
-        private int fboOutputTexture;
+        private GameObject instanceable;
+        private UBO ubo;
+        private Matrix4[] matrices;
 
         /// <summary>
         /// This is called whenever <see cref="Window"/>.Run() is called.<br></br>
@@ -68,21 +81,28 @@ namespace _3D_Renderer
         /// </summary>
         protected override void OnLoad()
         {
+            base.OnLoad();
+
             //Clear color and backface culling:
             GL.ClearColor(Color.PeachPuff);
             GL.CullFace(CullFaceMode.Back);
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.ClipDistance0);
 
+            //Initializations:
+            Input.Initialize();
+            WireframeRenderer.Initialize();
+
+            defaultMaterial = new UnlitMaterial(Color.Purple);
+
             //Create perspectivematrix, camera and locks mouse:
-            GeneratePerspectiveMatrix();
-            camera = new FreeCamera(1 / 800f, 5f);
-            CursorState = CursorState.Grabbed;
+            camera = new FreeCamera(70 * MathF.PI / 180f, 0.1f, 1000f, 1 / 800f, 5f);
 
             //Loads default texture and renderers:
             defaultTextureHandle = TextureLoader.LoadTexture(@"../../../_Assets/_Debug/WhitePixel.png");
             defaultRenderer = new DefaultRenderer();
             uiRenderer = new UIRenderer();
+            instancedRenderer = new InstancedRenderer();
 
             cmuSerifHandle = FontLoader.LoadFont(
                 @"../../../_Assets/_Built-In/_Fonts/_CMU Serif/cmuserif.png",
@@ -92,10 +112,27 @@ namespace _3D_Renderer
             PopulateScene();
             renderStats = new RenderStats();
 
+            Random rand = new Random();
+            matrices = new Matrix4[1000];
+            for (int i = 0; i < matrices.Length; i++)
+            {
+                Transform instanceTransform = new Transform();
 
-            base.OnLoad();
+                instanceTransform.scale = Vector3.One * (0.05f +
+                    MathF.Pow((float)rand.NextDouble(), 1.4f) * 1.95f);
+
+                float theta = (float)rand.NextDouble() * 2 * MathF.PI;
+                float height = (float)rand.NextDouble() * 2 - 1f;
+                instanceTransform.position = new Vector3(MathF.Cos(theta),
+                    height, MathF.Sin(theta)) * (25 + (float)rand.NextDouble() * 5);
+                instanceTransform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
+                matrices[i] = instanceTransform.TransformationMatrix();
+            }
+            ubo = new UBO(matrices, BufferUsageHint.StreamCopy);
+
             //Loading has finished, show application:
             IsVisible = true;
+            CursorState = CursorState.Grabbed;
         }
 
         /// <summary>
@@ -106,6 +143,9 @@ namespace _3D_Renderer
         /// Finally it adds a textured UI-element to the top-right corner which will be added to the
         /// "canvas" <see cref="Collection"/>.
         /// </summary>
+
+        private GameObject temp;
+        private GameObject temp2;
         private void PopulateScene()
         {
             sceneFBO = new FBO(new Vector2i((int)(Size.X * 0.3f), (int)(Size.Y * 0.3f)));
@@ -126,25 +166,37 @@ namespace _3D_Renderer
             ]);
             Material skybox = new CubemapMaterial(cubemapTextureHandle);
             cubemap.SetMaterial(skybox);
+            cubemap.cull = false;
             background.renderables.Add(cubemap);
             #endregion
 
             #region Monkey Heads
             //Populating scene:
             int textureHandle = TextureLoader.LoadTexture(@"../../../_Assets/_Debug/color-test.png");
-            Mesh suzanneMesh = MeshLoader.Load(@"../../../_Assets/_Debug/suzanne_normals.obj");
+            Mesh suzanneMesh = MeshLoader.Load(@"../../../_Assets/_Debug/suzanne.obj");
+            Mesh secondMesh = MeshLoader.Load(@"../../../_Assets/_Debug/suzanne.obj");
 
             GameObject gameObject = new GameObject();
-            Material material = new Diffuse(textureHandle, cubemapTextureHandle);
+            Material material = new Diffuse(textureHandle, Color4.White, cubemapTextureHandle);
             gameObject.SetMaterial(material);
-            gameObject.mesh = suzanneMesh;
+            gameObject.SetMesh(suzanneMesh);
             gameObject.name = "First GameObject!";
             gameObject.transform.position = new Vector3(0, 0, -5f);
-            gameObject.transform.scale = Vector3.One * 0.5f;
+            gameObject.transform.scale = Vector3.One;
+
+            temp = gameObject.Clone();
+            temp.showBoundingBox = true;
+            scene.renderables.Add(temp);
+            gameObject.showBoundingBox = false;
+
+            temp2 = temp.Clone();
+            temp2.showBoundingBox = true;
+            temp2.transform.position = new Vector3(0, 0, 5f);
+            scene.renderables.Add(temp2);
 
             //Random heads:
             Random rand = new Random();
-            for (int i = 0; i < 5000; i++)
+            for (int i = 0; i < 500; i++)
             {
                 gameObject.transform.scale = Vector3.One * (0.05f +
                     MathF.Pow((float)rand.NextDouble(), 1.4f) * 1.95f);
@@ -157,6 +209,28 @@ namespace _3D_Renderer
 
                 scene.renderables.Add(gameObject.Clone());
             }
+
+            instanceable = gameObject.Clone();
+            instanceable.SetMesh(secondMesh);
+            instanceable.transform.position = Vector3.Zero;
+            instanceable.transform.rotation = Vector3.Zero;
+            instanceable.transform.scale = Vector3.One;
+            InstanceMethod2 particleMaterial = new InstanceMethod2(Color4.White);
+            instanceable.SetMaterial(particleMaterial);
+            for(int i = 0; i < 1000; i++)
+            {
+                Transform instanceTransform = new Transform();
+
+                instanceTransform.scale = Vector3.One * (0.05f +
+                    MathF.Pow((float)rand.NextDouble(), 1.4f) * 1.95f);
+
+                float theta = (float)rand.NextDouble() * 2 * MathF.PI;
+                float height = (float)rand.NextDouble() * 2 - 1f;
+                instanceTransform.position = new Vector3(MathF.Cos(theta),
+                    height, MathF.Sin(theta)) * (25 + (float)rand.NextDouble() * 5);
+                instanceTransform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
+                particleMaterial.transformations[i] = instanceTransform.TransformationMatrix();
+            }
             #endregion
 
             #region UI
@@ -167,7 +241,7 @@ namespace _3D_Renderer
             uiElement.SetMaterial(uiMaterial);
             float scale = 0.3f;
             uiElement.transform.scale *= scale;
-            uiElement.transform.position += Vector2.One * (1-scale);
+            uiElement.transform.position += Vector3.One * (1 - scale);
             //canvas.renderables.Add(uiElement);
             #endregion
 
@@ -177,34 +251,17 @@ namespace _3D_Renderer
                 FontLoader.GetFont(cmuSerifHandle).textureAtlasHandle);
             UIElement textObject = new UIElement();
             textObject.SetMaterial(cmuFontMaterial);
-            textObject.mesh = MeshGeneration.Text(cmuSerifHandle, "Hello World!", out float textWidth);
+            textObject.SetMesh(MeshGeneration.Text(cmuSerifHandle, "Hello World!", out float textWidth));
             textObject.transform.scale /= textWidth / 2;
             //canvas.renderables.Add(textObject);
             #endregion
         }
 
-        /// <summary>
-        /// This should be called everytime the window is resized, this updates the perspective matrix
-        /// to fit with the new aspect ratio.
-        /// </summary>
-        private void GeneratePerspectiveMatrix()
-        {
-            if (!orthographicView)
-            {
-                perspectiveMatrix = Matrix4.CreatePerspectiveFieldOfView(70f / 180f * MathF.PI,
-                    (float)Program.window!.Size.X / Program.window!.Size.Y, 0.1f, 1000f);
-            }
-            else
-            {
-                perspectiveMatrix = Matrix4.CreateOrthographic(
-                    4f, 4f * Program.window!.Size.Y / Program.window!.Size.X, 0.1f, 1000f);
-            }
-        }
 
         protected override void OnResize(ResizeEventArgs e)
         {
             GL.Viewport(0, 0, e.Width, e.Height);
-            GeneratePerspectiveMatrix();
+            camera.GenerateProjectionMatrix();
             base.OnResize(e);
         }
 
@@ -221,8 +278,8 @@ namespace _3D_Renderer
             EasyUnload[] freezeFrame = EasyUnload.GetInstancedObjects().ToArray();
             foreach (EasyUnload objectToUnload in freezeFrame)
             {
-                if (objectToUnload.DisposeObject())
-                    Console.WriteLine($"Unloaded object {objectToUnload.GetType()} : EasyUnload");
+                objectToUnload.Dispose();
+                Console.WriteLine($"Unloaded object {objectToUnload.GetType()} : EasyUnload");
             }
 
             base.OnUnload();
@@ -232,22 +289,47 @@ namespace _3D_Renderer
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             timeSinceStartup += args.Time;
+            temp.transform.rotation.Y = (float)timeSinceStartup;
+            temp.transform.rotation.X = (float)timeSinceStartup * 0.4f;
+            temp.transform.rotation.Z = (float)timeSinceStartup * 3f;
+
+            Matrix4[] newMatrices = new Matrix4[matrices.Length];
+            for (int i = 0; i < matrices.Length; i++)
+            {
+                newMatrices[i] = matrices[i] 
+                    * Matrix4.CreateTranslation(0, MathF.Sin((float)timeSinceStartup) * i, 0);
+            }
+            ubo.Update(newMatrices);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             //Render scene:
+
+            //Background (skybox):
             GL.Disable(EnableCap.DepthTest);
-            defaultRenderer.RenderCollection(background, perspectiveMatrix, camera.RotationMatrix());
+            defaultRenderer.RenderCollection(background, camera,
+                camera.GetProjectionMatrix(), camera.RotationMatrix());
 
             GL.Enable(EnableCap.DepthTest);
             //sceneFBO.BindFramebuffer();
             //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            Transform transform = new Transform();
+            transform.position = new Vector3(0, 50 * MathF.Sin((float)timeSinceStartup / 20f), 0);
+            transform.scale = Vector3.One;
+            Vertex[] vertices = temp2.GetMesh()!.GetVAO().ModifyVertices(transform.TransformationMatrix()
+                , BufferUsageHint.StreamCopy);
+            temp2.GetMesh()!.UpdateBounding(vertices);
 
-            defaultRenderer.RenderCollection(scene, perspectiveMatrix, camera.CameraMatrix());
+            defaultRenderer.RenderCollection(scene, camera,
+                camera.GetProjectionMatrix(), camera.CameraMatrix());
             //sceneFBO.UnbindFramebuffer();
+            instancedRenderer.RenderInstancedObject(instanceable, 1000, 
+                camera.GetProjectionMatrix(), camera.CameraMatrix());
+
 
             //Render UI canvas:
             GL.Disable(EnableCap.DepthTest);
-            uiRenderer.RenderCollection(canvas, perspectiveMatrix, Matrix4.Identity);
+            uiRenderer.RenderCollection(canvas, camera,
+                Matrix4.Identity, camera.CameraMatrix());
 
             SwapBuffers();
 

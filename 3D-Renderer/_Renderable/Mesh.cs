@@ -1,4 +1,6 @@
 ﻿using _3D_Renderer._BufferObjects;
+using _3D_Renderer._Renderable._GameObject;
+using _3D_Renderer._Renderable._UIElement;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -23,14 +25,13 @@ namespace _3D_Renderer._Renderable
         private int indices = 0;
         public int IndicesCount() => indices;
 
-        private bool isWireframe = false;
-        public bool IsWiremesh() => isWireframe;
+        private float boundingRadius;
+        public float GetBoundingRadius() => boundingRadius;
 
         /// <summary>
         /// Bind this when rendering mesh
         /// </summary>
-        public void Bind(out bool isWireframe) {
-            isWireframe = this.isWireframe;
+        public void Bind() {
             GL.BindVertexArray(vao);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
         }
@@ -40,12 +41,22 @@ namespace _3D_Renderer._Renderable
             vao = new VAO();
         }
 
+        public void DisposeIBO()
+        {
+            ibo.Dispose();
+        }
+        public void DisposeVAO()
+        {
+            vao.Dispose();
+        }
+
         public void SetVertices(Vertex[] vertices, BufferUsageHint hint)
         {
             VBO vbo = new VBO(vertices, hint);
             Vertex.BindVAO(vbo, vao);
             GL.BindVertexArray(0);
             vbo.Dispose();
+            boundingRadius = CalculateBoundingRadius(vertices);
         }
         public void SetIndices(int[] indices, BufferUsageHint hint)
         {
@@ -56,6 +67,8 @@ namespace _3D_Renderer._Renderable
             }
             ibo = new IBO(indices, hint);
         }
+
+        #region Modification
         public void FlipFaces()
         {
             int[] indices = ibo.GetIndices();
@@ -68,6 +81,7 @@ namespace _3D_Renderer._Renderable
             SetIndices(indices, BufferUsageHint.StaticCopy);
         }
 
+        #region Wireframe
         public Mesh CopyAsWireframe()
         {
             Mesh output = new Mesh();
@@ -76,7 +90,7 @@ namespace _3D_Renderer._Renderable
             int[] newIndices = new int[indices.Length * 2];
             for (int i = 0; i < indices.Length; i += 3)
             {
-                newIndices[i * 2    ] = indices[i];
+                newIndices[i * 2] = indices[i];
                 newIndices[i * 2 + 1] = indices[i + 1];
                 newIndices[i * 2 + 2] = indices[i + 1];
                 newIndices[i * 2 + 3] = indices[i + 2];
@@ -85,10 +99,34 @@ namespace _3D_Renderer._Renderable
             }
             output.name = name;
             output.SetIndices(newIndices, BufferUsageHint.StaticCopy);
-            output.isWireframe = true;
             return output;
         }
+        public Mesh ConvertToWireframe()
+        {
+            VAO oldVAO = vao;
+            IBO oldIBO = ibo;
+            SetVertices(vao.CloneVertices(), BufferUsageHint.StaticCopy);
+            oldVAO.Dispose();
 
+            int[] indices = ibo.GetIndices();
+            int[] newIndices = new int[indices.Length * 2];
+            for (int i = 0; i < indices.Length; i += 3)
+            {
+                newIndices[i * 2] = indices[i];
+                newIndices[i * 2 + 1] = indices[i + 1];
+                newIndices[i * 2 + 2] = indices[i + 1];
+                newIndices[i * 2 + 3] = indices[i + 2];
+                newIndices[i * 2 + 4] = indices[i + 2];
+                newIndices[i * 2 + 5] = indices[i];
+            }
+            SetIndices(newIndices, BufferUsageHint.StaticCopy);
+            oldIBO.Dispose();
+            return this;
+        }
+        #endregion
+        #endregion
+
+        #region Operators
         public static Mesh operator +(Mesh a, Vector3 offset)
         {
             Mesh merged = new Mesh();
@@ -147,6 +185,7 @@ namespace _3D_Renderer._Renderable
 
             return merged;
         }
+        #endregion
 
         public Mesh Copy()
         {
@@ -154,6 +193,104 @@ namespace _3D_Renderer._Renderable
             copy.SetVertices(vao.CloneVertices(), BufferUsageHint.StaticCopy);
             copy.SetIndices(ibo.GetIndices(), BufferUsageHint.StaticCopy);
             return copy;
+        }
+
+        public void ApplyTransformation(Matrix4 transformation)
+        {
+            Vertex[] vertices = vao.CloneVertices();
+            foreach(Vertex v in vertices)
+            {
+                v.vertexPosition = (transformation * new Vector4(v.vertexPosition, 0)).Xyz;
+            }
+            SetVertices(vertices, BufferUsageHint.StaticCopy);
+            SetIndices(ibo.GetIndices(), BufferUsageHint.StaticCopy);
+        }
+
+        public void UpdateBounding(Vertex[] vertices)
+        {
+            CalculateBoundingBox(vertices);
+            boundingRadius = CalculateBoundingRadius(vertices);
+        }
+
+        private float CalculateBoundingRadius(Vertex[] vertices)
+        {
+            float maxRadiusSquared = 0;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                float radius = vertices[i].vertexPosition.LengthSquared;
+                if (radius > maxRadiusSquared)
+                {
+                    maxRadiusSquared = radius;
+                }
+            }
+
+            return MathF.Sqrt(maxRadiusSquared);
+        }
+
+        private (Vector3 center, Vector3 size) CalculateBoundingBox(Matrix4 rotationMatrix,
+            Vertex[] vertices)
+        {
+            float minX = float.MaxValue, maxX = float.MinValue;
+            float minY = float.MaxValue, maxY = float.MinValue;
+            float minZ = float.MaxValue, maxZ = float.MinValue;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                Vector3 position = (new Vector4(vertices[i].vertexPosition, 0)
+                    * rotationMatrix).Xyz;
+
+                if (position.X > maxX)
+                    maxX = position.X;
+                if (position.Y > maxY)
+                    maxY = position.Y;
+                if (position.Z > maxZ)
+                    maxZ = position.Z;
+
+                if (position.X < minX)
+                    minX = position.X;
+                if (position.Y < minY)
+                    minY = position.Y;
+                if (position.Z < minZ)
+                    minZ = position.Z;
+            }
+
+            return (new Vector3(minX + maxX, minY + maxY, minZ + maxZ) / 2f,
+                new Vector3(maxX - minX, maxY - minY, maxZ - minZ) / 2f);
+        }
+        private (Vector3 center, Vector3 size) CalculateBoundingBox(Vertex[] vertices)
+        {
+            float minX = float.MaxValue, maxX = float.MinValue;
+            float minY = float.MaxValue, maxY = float.MinValue;
+            float minZ = float.MaxValue, maxZ = float.MinValue;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                Vector3 position = vertices[i].vertexPosition;
+
+                if (position.X > maxX)
+                    maxX = position.X;
+                if (position.Y > maxY)
+                    maxY = position.Y;
+                if (position.Z > maxZ)
+                    maxZ = position.Z;
+
+                if (position.X < minX)
+                    minX = position.X;
+                if (position.Y < minY)
+                    minY = position.Y;
+                if (position.Z < minZ)
+                    minZ = position.Z;
+            }
+
+            return (new Vector3(minX + maxX, minY + maxY, minZ + maxZ) / 2f,
+                new Vector3(maxX - minX, maxY - minY, maxZ - minZ) / 2f);
+        }
+
+        public (Vector3 center, Vector3 size) CalculateBoundingBox(Matrix4 rotationMatrix)
+        {
+            return CalculateBoundingBox(rotationMatrix, vao.GetVertices());
+        }
+        public (Vector3 center, Vector3 size) CalculateBoundingBox()
+        {
+            return CalculateBoundingBox(vao.GetVertices());
         }
     }
 }
