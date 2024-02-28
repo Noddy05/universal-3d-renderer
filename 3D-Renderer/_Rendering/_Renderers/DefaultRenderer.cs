@@ -46,7 +46,7 @@ namespace _3D_Renderer._Rendering._Renderers
                     float longestScale = MathF.Max(MathF.Max(renderable.transform.scale.X,
                         renderable.transform.scale.Y), renderable.transform.scale.Z);
                     if (!frustum.Intersects(renderable.transform.position + camera.Position(),
-                        renderable.GetBoundingRadius() * longestScale))
+                        renderable.GetMesh()!.GetBoundingRadius() * longestScale))
                     {
                         //Cull this object => skip this one
                         continue;
@@ -57,14 +57,14 @@ namespace _3D_Renderer._Rendering._Renderers
                 if (renderable.showBoundingBox)
                 {
                     renderable.CalculateBoundingBox(true);
-                    (Vector3 center, Vector3 size) boundingBox = renderable.GetBoundingBox();
+                    (Vector3 center, Vector3 size) boundingBox = renderable.GetMesh()!.GetBoundingBox();
                     WireframeRenderer.RenderWireframeBox(boundingBox.center * renderable.transform.scale
                         + renderable.transform.position,
                         boundingBox.size * renderable.transform.scale,
                         projectionMatrix, cameraMatrix);
 
                     WireframeRenderer.RenderWireframeSphere(renderable.transform.position,
-                        renderable.GetBoundingRadius() * renderable.transform.scale,
+                        renderable.GetMesh()!.GetBoundingRadius() * renderable.transform.scale,
                         projectionMatrix, cameraMatrix);
                 }
 

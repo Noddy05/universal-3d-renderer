@@ -16,7 +16,7 @@ using _3D_Renderer._Renderable._UIElement;
 using _3D_Renderer._Generation;
 using _3D_Renderer._Renderable._Cubemap;
 using _3D_Renderer._Behaviour;
-using _3D_Renderer._BufferObjects;
+using _3D_Renderer._GLObjects;
 
 namespace _3D_Renderer
 {
@@ -66,7 +66,6 @@ namespace _3D_Renderer
         private Collection scene = new Collection();
         private Collection canvas = new Collection();
         private GameObject instanceable;
-        private UBO ubo;
         private Matrix4[] matrices;
 
         /// <summary>
@@ -88,10 +87,6 @@ namespace _3D_Renderer
             GL.CullFace(CullFaceMode.Back);
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.ClipDistance0);
-
-            //Initializations:
-            Input.Initialize();
-            WireframeRenderer.Initialize();
 
             defaultMaterial = new UnlitMaterial(Color.Purple);
 
@@ -128,7 +123,6 @@ namespace _3D_Renderer
                 instanceTransform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
                 matrices[i] = instanceTransform.TransformationMatrix();
             }
-            ubo = new UBO(matrices, BufferUsageHint.StreamCopy);
 
             //Loading has finished, show application:
             IsVisible = true;
@@ -146,6 +140,7 @@ namespace _3D_Renderer
 
         private GameObject temp;
         private GameObject temp2;
+        private int instanceCount = 5000;
         private void PopulateScene()
         {
             sceneFBO = new FBO(new Vector2i((int)(Size.X * 0.3f), (int)(Size.Y * 0.3f)));
@@ -170,7 +165,7 @@ namespace _3D_Renderer
             background.renderables.Add(cubemap);
             #endregion
 
-            #region Monkey Heads
+            #region GameObjects
             //Populating scene:
             int textureHandle = TextureLoader.LoadTexture(@"../../../_Assets/_Debug/color-test.png");
             Mesh suzanneMesh = MeshLoader.Load(@"../../../_Assets/_Debug/suzanne.obj");
@@ -186,7 +181,7 @@ namespace _3D_Renderer
 
             temp = gameObject.Clone();
             temp.showBoundingBox = true;
-            scene.renderables.Add(temp);
+            //scene.renderables.Add(temp);
             gameObject.showBoundingBox = false;
 
             temp2 = temp.Clone();
@@ -207,7 +202,7 @@ namespace _3D_Renderer
                     height, MathF.Sin(theta)) * (25 + (float)rand.NextDouble() * 5);
                 gameObject.transform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
 
-                scene.renderables.Add(gameObject.Clone());
+                //scene.renderables.Add(gameObject.Clone());
             }
 
             instanceable = gameObject.Clone();
@@ -217,10 +212,10 @@ namespace _3D_Renderer
             instanceable.transform.scale = Vector3.One;
             InstanceMethod2 particleMaterial = new InstanceMethod2(Color4.White);
             instanceable.SetMaterial(particleMaterial);
-            for(int i = 0; i < 1000; i++)
+            Matrix4[] matrices = new Matrix4[instanceCount];
+            for(int i = 0; i < instanceCount; i++)
             {
                 Transform instanceTransform = new Transform();
-
                 instanceTransform.scale = Vector3.One * (0.05f +
                     MathF.Pow((float)rand.NextDouble(), 1.4f) * 1.95f);
 
@@ -229,8 +224,10 @@ namespace _3D_Renderer
                 instanceTransform.position = new Vector3(MathF.Cos(theta),
                     height, MathF.Sin(theta)) * (25 + (float)rand.NextDouble() * 5);
                 instanceTransform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
-                particleMaterial.transformations[i] = instanceTransform.TransformationMatrix();
+                matrices[i] = instanceTransform.TransformationMatrix();
             }
+            instanceable.GetMesh()!.CreateInstanceVBO(matrices);
+
             #endregion
 
             #region UI
@@ -282,6 +279,9 @@ namespace _3D_Renderer
                 Console.WriteLine($"Unloaded object {objectToUnload.GetType()} : EasyUnload");
             }
 
+            //Dispose UBO:
+            UBO.Dispose();
+
             base.OnUnload();
         }
 
@@ -293,16 +293,9 @@ namespace _3D_Renderer
             temp.transform.rotation.X = (float)timeSinceStartup * 0.4f;
             temp.transform.rotation.Z = (float)timeSinceStartup * 3f;
 
-            Matrix4[] newMatrices = new Matrix4[matrices.Length];
-            for (int i = 0; i < matrices.Length; i++)
-            {
-                newMatrices[i] = matrices[i] 
-                    * Matrix4.CreateTranslation(0, MathF.Sin((float)timeSinceStartup) * i, 0);
-            }
-            ubo.Update(newMatrices);
-
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             //Render scene:
+
 
             //Background (skybox):
             GL.Disable(EnableCap.DepthTest);
@@ -313,18 +306,30 @@ namespace _3D_Renderer
             //sceneFBO.BindFramebuffer();
             //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             Transform transform = new Transform();
-            transform.position = new Vector3(0, 50 * MathF.Sin((float)timeSinceStartup / 20f), 0);
+            transform.position = new Vector3(0, 2 * MathF.Sin((float)timeSinceStartup / 5f), 0);
             transform.scale = Vector3.One;
-            Vertex[] vertices = temp2.GetMesh()!.GetVAO().ModifyVertices(transform.TransformationMatrix()
-                , BufferUsageHint.StreamCopy);
-            temp2.GetMesh()!.UpdateBounding(vertices);
+
+            //This takes a long time:
+            //400 frames without this line, 120 without calculating bounds, 100 when calculating bounds
+            //temp2.GetMesh()!.ApplyTransformation(transform.TransformationMatrix(), true);
 
             defaultRenderer.RenderCollection(scene, camera,
                 camera.GetProjectionMatrix(), camera.CameraMatrix());
             //sceneFBO.UnbindFramebuffer();
-            instancedRenderer.RenderInstancedObject(instanceable, 1000, 
-                camera.GetProjectionMatrix(), camera.CameraMatrix());
 
+            //Instanced:
+
+            /*
+            Matrix4[] newMatrices = new Matrix4[matrices.Length];
+            for (int i = 0; i < matrices.Length; i++)
+            {
+                newMatrices[i] = matrices[i]
+                    * Matrix4.CreateTranslation(0, MathF.Sin((float)timeSinceStartup) * i, 0);
+            }
+            UBO.Update(newMatrices);
+            */
+            instancedRenderer.RenderInstancedObject(instanceable, instanceCount, 
+                camera.GetProjectionMatrix(), camera.CameraMatrix());
 
             //Render UI canvas:
             GL.Disable(EnableCap.DepthTest);

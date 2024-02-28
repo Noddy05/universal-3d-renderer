@@ -3,10 +3,12 @@
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 textureCoords;
+layout (location = 3) in mat4 instanceTransformation;
 
-layout(std140, binding = 0) uniform Transformations { 
-	mat4 transformationMatrix[1000];
-};
+
+//layout(std140, binding = 0) uniform Transformations { 
+//	mat4 transformationMatrix[1000];
+//};
 
 uniform mat4 projectionMatrix;
 uniform mat4 cameraMatrix;
@@ -15,7 +17,7 @@ out vec3 vNormal;
 out vec2 vTexCoords;
 
 void main() {
-	mat4 transformationMat = transformationMatrix[gl_InstanceID];
+	mat4 transformationMat = instanceTransformation;
     vec3 worldPosition = (transformationMat * vec4(position, 1)).xyz;
     gl_Position = projectionMatrix * cameraMatrix * vec4(worldPosition, 1);
 

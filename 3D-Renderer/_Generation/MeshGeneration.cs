@@ -83,9 +83,9 @@ namespace _3D_Renderer._Generation
                 new Vertex(new Vector3( 1.0f,  1.0f, -1.0f)),  
                 new Vertex(new Vector3(-1.0f,  1.0f, -1.0f)),
             ];
-            foreach(Vertex vertex in vertices)
+            for(int i = 0; i < vertices.Length; i++)
             {
-                vertex.vertexNormal = vertex.vertexPosition.Normalized();
+                vertices[i].vertexNormal = vertices[i].vertexPosition.Normalized();
             }
 
             int[] indices = [

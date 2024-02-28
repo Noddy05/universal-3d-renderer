@@ -14,13 +14,13 @@ using System.Threading.Tasks;
 
 namespace _3D_Renderer._Rendering
 {
-    internal class WireframeRenderer
+    internal static class WireframeRenderer
     {
         private static GameObject? wireframeBox;
         private static GameObject? wireframeSphere;
         private static Window? window;
 
-        public static void Initialize()
+        static WireframeRenderer()
         {
             UnlitMaterial material = new UnlitMaterial(Color4.Blue);
             wireframeBox = new GameObject();
@@ -30,12 +30,14 @@ namespace _3D_Renderer._Rendering
             wireframeSphere = new GameObject();
             Mesh fullCircleMesh = WireframeGeneration.Circle(64);
             Mesh circle = WireframeGeneration.Circle(64);
-            circle.ApplyTransformation(Matrix4.CreateFromQuaternion(
+            /*
+            circle.PermanentlyApplyTransformation(Matrix4.CreateFromQuaternion(
                 Quaternion.FromEulerAngles(new Vector3(MathF.PI / 2f, 0, 0))));
             fullCircleMesh += circle;
-            circle.ApplyTransformation(Matrix4.CreateFromQuaternion(
+            circle.PermanentlyApplyTransformation(Matrix4.CreateFromQuaternion(
                 Quaternion.FromEulerAngles(new Vector3(0, MathF.PI / 2f, 0))));
             fullCircleMesh += circle;
+            */
             wireframeSphere.SetMesh(fullCircleMesh);
             wireframeSphere.SetMaterial(material);
 

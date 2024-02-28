@@ -47,7 +47,7 @@ namespace _3D_Renderer._Renderable._Cubemap
             Matrix4 projMatrix = projectionMatrix;
             GL.UniformMatrix4(UL_cameraMatrix, false, ref camMatrix);
             GL.UniformMatrix4(UL_projectionMatrix, false, ref projMatrix);
-            return mesh.IndicesCount();
+            return mesh.GetIndices().Length;
         }
     }
 }

@@ -9,7 +9,7 @@ using static OpenTK.Graphics.OpenGL.GL;
 
 namespace _3D_Renderer
 {
-    internal class Input
+    internal static class Input
     {
         public static Dictionary<string, Keys> buttons = new Dictionary<string, Keys>();
         public static Dictionary<string, MouseButton> 
@@ -20,7 +20,7 @@ namespace _3D_Renderer
         /// Should be called before attempting to use <see cref="Input"/> buttons.<br></br>
         /// This initializes the button bindings.
         /// </summary>
-        public static void Initialize()
+        static Input()
         {
             window = Program.GetWindow();
             InitializeButtons();

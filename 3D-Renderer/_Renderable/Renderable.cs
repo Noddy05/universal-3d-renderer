@@ -52,12 +52,6 @@ namespace _3D_Renderer._Renderable
             throw new NotImplementedException();
         }
 
-        protected (Vector3 center, Vector3 size) boundingBox;
-        public (Vector3 center, Vector3 size) GetBoundingBox() => boundingBox;
-
-        protected float boundingRadius;
-        public float GetBoundingRadius() => mesh!.GetBoundingRadius();
-
         public void CalculateBoundingBox(bool recalculateOnlyIfRotationChanged)
         {
             if (mesh == null)
@@ -67,7 +61,7 @@ namespace _3D_Renderer._Renderable
                 && !transform.RotationChangedSinceLastCheck())
                 return;
 
-            boundingBox = mesh.CalculateBoundingBox(transform.RotationMatrix());
+            mesh.UpdateBoundingBox(mesh.GetVertices(), transform.RotationMatrix());
         }
     }
 }

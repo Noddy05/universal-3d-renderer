@@ -3,14 +3,11 @@ using _3D_Renderer._Renderable;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
-namespace _3D_Renderer._BufferObjects
+namespace _3D_Renderer._GLObjects
 {
     internal class VAO : EasyUnload
     {
         private int handle = -1;
-        protected Vertex[] vertices;
-        public Vertex[] GetVertices() => vertices;
-        public Vertex[] CloneVertices() => VBO.DuplicateVertices(vertices);
         public int GetHandle() => handle;
 
         //Automatically returns handle when casting to int:
@@ -21,19 +18,46 @@ namespace _3D_Renderer._BufferObjects
             handle = GL.GenVertexArray();
         }
 
-        public void Bind(VBO vbo, int index, int size,
+        public void BindVertexData(VBO vbo)
+        {
+            //For each vertex data struct:
+            //Position:
+            SetPointer(vbo, 0, 3, 8, 0, true, false);
+
+            //Normal:
+            SetPointer(vbo, 1, 3, 8, 3, false, false);
+
+            //TexCoordinate
+            SetPointer(vbo, 2, 2, 8, 6, false, true);
+        }
+        public void BindInstanceData(VBO instancedVBO)
+        {
+            //For each vertex data struct:
+            //Position:
+            SetPointer(instancedVBO, 3, 4, 16, 0,  true, false);
+            SetPointer(instancedVBO, 4, 4, 16, 4,  false, false);
+            SetPointer(instancedVBO, 5, 4, 16, 8,  false, false);
+            SetPointer(instancedVBO, 6, 4, 16, 12, false, false);
+
+            GL.VertexAttribDivisor(3, 1);
+            GL.VertexAttribDivisor(4, 1);
+            GL.VertexAttribDivisor(5, 1);
+            GL.VertexAttribDivisor(6, 1);
+
+            //Unbind VAO & VBO:
+            GL.BindVertexArray(0);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        }
+
+        public void SetPointer(VBO vbo, int index, int size,
             int stride, int offset, bool bind, bool unbind)
         {
-            Vertex[]? verts = vbo.GetVertices();
-            if (verts == null)
-                throw new Exception("Trying to bind VBO to VAO failed! (VBO.GetVertices() returned null)");
-            vertices = verts;
-
             if (bind)
             {
                 GL.BindVertexArray(handle);
-                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo!);
             }
+
             GL.VertexAttribPointer(index, size, VertexAttribPointerType.Float, false,
                 stride * sizeof(float), offset * sizeof(float));
             GL.EnableVertexAttribArray(index);
@@ -46,20 +70,13 @@ namespace _3D_Renderer._BufferObjects
             }
         }
 
-        public void ModifyPointer(VBO vbo, int index, int size,
-            int stride, int offset, bool copyNewVertices)
+        /*
+        public void ModifyPointer(int index, int size,
+            int stride, int offset)
         {
-            if (copyNewVertices)
-            {
-                Vertex[]? verts = vbo.GetVertices();
-                if (verts == null)
-                    throw new Exception("Trying to bind VBO to VAO failed! (VBO.GetVertices() returned null)");
-                vertices = verts;
-            }
-
             //Bind VAO and VBO
             GL.BindVertexArray(handle);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo!);
 
             //Modify pointer:
             GL.VertexAttribPointer(index, size, VertexAttribPointerType.Float, false,
@@ -69,28 +86,16 @@ namespace _3D_Renderer._BufferObjects
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         }
+        */
 
         /// <summary>
-        /// Returns the new vertices
         /// </summary>
         /// <param name="transformationMatrix"></param>
         /// <param name="bufferUsageHint"></param>
         /// <returns></returns>
-        public Vertex[] ModifyVertices(Matrix4 transformationMatrix, BufferUsageHint bufferUsageHint)
+        public void ModifyVertices(Matrix4 transformationMatrix)
         {
-            Vertex[] newVerts = new Vertex[vertices.Length];
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                newVerts[i] = new Vertex((new Vector4(vertices[i].vertexPosition, 1) 
-                    * transformationMatrix).Xyz,
-                    vertices[i].vertexNormal, vertices[i].textureCoordinate);
-            }
-            VBO vbo = new VBO(newVerts, bufferUsageHint);
-            ModifyPointer(vbo, 0, 3, 8, 0, false);
-            GL.BindVertexArray(0);
-            vbo.Dispose();
-
-            return newVerts;
+            //vbo!.TransformVertices(transformationMatrix);
         }
 
         private bool disposed = false;

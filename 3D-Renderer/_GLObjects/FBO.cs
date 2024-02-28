@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace _3D_Renderer._BufferObjects
+namespace _3D_Renderer._GLObjects
 {
     internal class FBO : EasyUnload
     {
