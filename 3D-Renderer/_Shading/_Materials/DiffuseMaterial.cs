@@ -1,15 +1,10 @@
 ﻿using _3D_Renderer._Geometry;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace _3D_Renderer._Shading._Materials
 {
-    internal class Diffuse : Material
+    internal class DiffuseMaterial : Material
     {
         public int textureHandle = -1;
         public int reflectionMap = -1;
@@ -28,7 +23,13 @@ namespace _3D_Renderer._Shading._Materials
         private int UL_specularHighlightDamper = -1;
         private Plane clippingPlane;
 
-        public Diffuse(int textureHandle, Color4 color, int reflectionCubemapTexture)
+        /// <summary>
+        /// Creates new <see cref="DiffuseMaterial"/> that responds to light, shadows, cubemaps...
+        /// </summary>
+        /// <param name="textureHandle"></param>
+        /// <param name="color"></param>
+        /// <param name="reflectionCubemapTexture"></param>
+        public DiffuseMaterial(int textureHandle, Color4 color, int reflectionCubemapTexture)
             : base(new Shader(@"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_vertex_shader.vert",
                 @"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_fragment_shader.frag"))
         {

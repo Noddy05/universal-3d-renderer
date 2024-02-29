@@ -13,12 +13,22 @@ namespace _3D_Renderer._Shading
         private int handle = -1;
         public int GetHandle() => handle;
 
-        //Automatically returns shaderhandle when casting to int:
+        /// <summary>
+        /// Automatically returns shaderhandle when casting to int
+        /// </summary>
+        /// <param name="shader"></param>
         public static implicit operator int(Shader shader) => shader.GetHandle();
 
 
         private List<int> attachedHandles = new List<int>();
 
+        /// <summary>
+        /// This creates a basic <see cref="Shader"/> consisting of a vertex shader and a fragment shader.
+        /// </summary>
+        /// <param name="vertexShaderLocation">The location (on your computer) 
+        /// of the vertex shader code</param>
+        /// <param name="fragmentShaderLocation">The location (on your computer) 
+        /// of the fragment shader code</param>
         public Shader(string vertexShaderLocation, string fragmentShaderLocation)
         {
             handle = GL.CreateProgram();
@@ -27,6 +37,20 @@ namespace _3D_Renderer._Shading
             AttachShader(fragmentShaderLocation, ShaderType.FragmentShader);
             FinalizeShader();
         }
+
+        /// <summary>
+        /// This creates a basic <see cref="Shader"/> consisting of a vertex shader and a fragment shader.
+        /// However, after the first two parameters more shaders can be bound by using 
+        /// (<see cref="string"/>: location of the shader code, 
+        /// <see cref="ShaderType"/>: Type of shader - i.e. <see cref="ShaderType.FragmentShader"/>, 
+        /// <see cref="ShaderType.VertexShader"/>...)
+        /// </summary>
+        /// <param name="vertexShaderLocation">The location (on your computer) 
+        /// of the vertex shader code</param>
+        /// <param name="fragmentShaderLocation">The location (on your computer) 
+        /// of the fragment shader code</param>
+        /// <param name="otherShaders">The location and <see cref="ShaderType"/> of other GLSL shaders 
+        /// you want to attach.</param>
         public Shader(string vertexShaderLocation, string fragmentShaderLocation,
             params (string location, ShaderType shaderType)[] otherShaders)
         {
@@ -67,9 +91,12 @@ namespace _3D_Renderer._Shading
             GL.CompileShader(shaderHandle);
             attachedHandles.Add(shaderHandle);
         }
-
-        //Reads shader code and includes all referenced libraries
-        //Libraries are included with: #include folder/shader_code_location.glsl
+        /// <summary>
+        /// Reads shader code and includes all referenced libraries
+        /// Libraries are included with: <br></br>#include folder/shader_code_location.glsl
+        /// </summary>
+        /// <param name="shaderCode"></param>
+        /// <returns></returns>
         private string IncludeLibraries(string[] shaderCode)
         {
             string compiledCode = "";
@@ -77,6 +104,7 @@ namespace _3D_Renderer._Shading
             {
                 string libraryInclude = "#include";
                 int firstLibraryReferenceLocation = shaderCode[i].IndexOf(libraryInclude);
+
                 //If #include was found in line:
                 if (firstLibraryReferenceLocation != -1)
                 {
@@ -110,6 +138,11 @@ namespace _3D_Renderer._Shading
             return compiledCode;
         }
 
+        /// <summary>
+        /// Should be called after binding shaders with <see cref="AttachShader"/> to 
+        /// attach GLSL shaders to the <see cref="Shader"/> object.
+        /// </summary>
+        /// <exception cref="Exception"></exception>
         public void FinalizeShader()
         {
             //Must be called after binding shaders

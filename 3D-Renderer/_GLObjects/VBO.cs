@@ -69,7 +69,7 @@ namespace _3D_Renderer._GLObjects
         public void SetBufferSubData(float[] data, int offset)
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, handle);
-            GL.BufferSubData(BufferTarget.ArrayBuffer, offset, data.Length * sizeof(float) * 8, data);
+            GL.BufferSubData(BufferTarget.ArrayBuffer, offset, data.Length * sizeof(float), data);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         }
         /*

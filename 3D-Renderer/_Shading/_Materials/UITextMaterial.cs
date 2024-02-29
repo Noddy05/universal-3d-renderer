@@ -1,14 +1,9 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace _3D_Renderer._Shading._Materials
 {
-    internal class UIText : Material
+    internal class UITextMaterial : Material
     {
         public int textureHandle = -1;
         public Color4 color;
@@ -17,7 +12,12 @@ namespace _3D_Renderer._Shading._Materials
         private int UL_aspectRatio = -1;
 
         private Window window;
-        public UIText(Color4 color, int textureHandle) 
+        /// <summary>
+        /// Creates new <see cref="UITextMaterial"/> consisting of a texture and a <see cref="Color4"/>.
+        /// </summary>
+        /// <param name="color"></param>
+        /// <param name="textureHandle"></param>
+        public UITextMaterial(Color4 color, int textureHandle) 
             : base(new Shader(
                 @"../../../_Assets/_Built-In/_Shaders/_UI/_Text/text.vert",
                 @"../../../_Assets/_Built-In/_Shaders/_UI/_Text/text.frag"))
@@ -30,6 +30,10 @@ namespace _3D_Renderer._Shading._Materials
             window = Program.GetWindow();
         }
 
+        /// <summary>
+        /// Automatically binds <see cref="Shader"/>, texture sampler, texture,
+        /// <see cref="Color4"/> and aspect ratio.
+        /// </summary>
         public override void ApplyMaterial()
         {
             base.ApplyMaterial();

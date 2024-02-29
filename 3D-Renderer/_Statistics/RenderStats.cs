@@ -36,7 +36,7 @@ namespace _3D_Renderer._Statistics
         }
 
         /// <summary>
-        /// Updates every frame.
+        /// Updates every frame. Changes title to show frame statistics.
         /// </summary>
         /// <param name="args"></param>
         private void FrameRendered(FrameEventArgs args)

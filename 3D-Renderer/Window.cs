@@ -20,7 +20,8 @@ using _3D_Renderer._GLObjects;
 
 namespace _3D_Renderer
 {
-    /* To clean up:
+    /* 
+     * To clean up:
      * InstanceMethods are temporary classes, should be rewritten
      * UBO should be rewritten to not lose generality
      * Cleanup in how vao modifications are done 
@@ -41,7 +42,8 @@ namespace _3D_Renderer
             {
                 ClientSize = new Vector2i(1920, 1080),
                 StartVisible = false,
-                Title = "Game Window"
+                Title = "Game Window",
+                NumberOfSamples = 1,
             })
         {
             CenterWindow();
@@ -56,7 +58,6 @@ namespace _3D_Renderer
         //Renderers
         private Renderer defaultRenderer;
         private UIRenderer uiRenderer;
-        private InstancedRenderer instancedRenderer;
 
         //Temp:
         private FBO sceneFBO;
@@ -87,6 +88,7 @@ namespace _3D_Renderer
             GL.CullFace(CullFaceMode.Back);
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.ClipDistance0);
+            GL.Enable(EnableCap.Multisample);
 
             defaultMaterial = new UnlitMaterial(Color.Purple);
 
@@ -97,7 +99,6 @@ namespace _3D_Renderer
             defaultTextureHandle = TextureLoader.LoadTexture(@"../../../_Assets/_Debug/WhitePixel.png");
             defaultRenderer = new DefaultRenderer();
             uiRenderer = new UIRenderer();
-            instancedRenderer = new InstancedRenderer();
 
             cmuSerifHandle = FontLoader.LoadFont(
                 @"../../../_Assets/_Built-In/_Fonts/_CMU Serif/cmuserif.png",
@@ -140,7 +141,7 @@ namespace _3D_Renderer
 
         private GameObject temp;
         private GameObject temp2;
-        private int instanceCount = 5000;
+        private int instanceCount = 30000;
         private void PopulateScene()
         {
             sceneFBO = new FBO(new Vector2i((int)(Size.X * 0.3f), (int)(Size.Y * 0.3f)));
@@ -172,7 +173,7 @@ namespace _3D_Renderer
             Mesh secondMesh = MeshLoader.Load(@"../../../_Assets/_Debug/suzanne.obj");
 
             GameObject gameObject = new GameObject();
-            Material material = new Diffuse(textureHandle, Color4.White, cubemapTextureHandle);
+            Material material = new DiffuseMaterial(textureHandle, Color4.White, cubemapTextureHandle);
             gameObject.SetMaterial(material);
             gameObject.SetMesh(suzanneMesh);
             gameObject.name = "First GameObject!";
@@ -181,8 +182,9 @@ namespace _3D_Renderer
 
             temp = gameObject.Clone();
             temp.showBoundingBox = true;
-            //scene.renderables.Add(temp);
+            temp.transform.position = new Vector3(0, 0, -5f);
             gameObject.showBoundingBox = false;
+            scene.renderables.Add(temp);
 
             temp2 = temp.Clone();
             temp2.showBoundingBox = true;
@@ -206,12 +208,14 @@ namespace _3D_Renderer
             }
 
             instanceable = gameObject.Clone();
-            instanceable.SetMesh(secondMesh);
+            instanceable.SetMesh(MeshGeneration.SmoothCube());
             instanceable.transform.position = Vector3.Zero;
             instanceable.transform.rotation = Vector3.Zero;
             instanceable.transform.scale = Vector3.One;
-            InstanceMethod2 particleMaterial = new InstanceMethod2(Color4.White);
+            Material particleMaterial = new ParticleMaterial(Color4.White);
             instanceable.SetMaterial(particleMaterial);
+
+            rand = new Random(1);
             Matrix4[] matrices = new Matrix4[instanceCount];
             for(int i = 0; i < instanceCount; i++)
             {
@@ -227,6 +231,11 @@ namespace _3D_Renderer
                 matrices[i] = instanceTransform.TransformationMatrix();
             }
             instanceable.GetMesh()!.CreateInstanceVBO(matrices);
+            instanceable.cull = false;
+            for(int i = 0; i < 100; i++)
+            {
+                scene.renderables.Add(instanceable);
+            }
 
             #endregion
 
@@ -244,7 +253,7 @@ namespace _3D_Renderer
 
             #region Text
             //Text
-            Material cmuFontMaterial = new UIText(Color4.White,
+            Material cmuFontMaterial = new UITextMaterial(Color4.White,
                 FontLoader.GetFont(cmuSerifHandle).textureAtlasHandle);
             UIElement textObject = new UIElement();
             textObject.SetMaterial(cmuFontMaterial);
@@ -294,8 +303,7 @@ namespace _3D_Renderer
             temp.transform.rotation.Z = (float)timeSinceStartup * 3f;
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            //Render scene:
-
+            //Render everything:
 
             //Background (skybox):
             GL.Disable(EnableCap.DepthTest);
@@ -305,31 +313,29 @@ namespace _3D_Renderer
             GL.Enable(EnableCap.DepthTest);
             //sceneFBO.BindFramebuffer();
             //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            Transform transform = new Transform();
-            transform.position = new Vector3(0, 2 * MathF.Sin((float)timeSinceStartup / 5f), 0);
-            transform.scale = Vector3.One;
-
-            //This takes a long time:
-            //400 frames without this line, 120 without calculating bounds, 100 when calculating bounds
-            //temp2.GetMesh()!.ApplyTransformation(transform.TransformationMatrix(), true);
 
             defaultRenderer.RenderCollection(scene, camera,
                 camera.GetProjectionMatrix(), camera.CameraMatrix());
             //sceneFBO.UnbindFramebuffer();
 
             //Instanced:
-
-            /*
-            Matrix4[] newMatrices = new Matrix4[matrices.Length];
-            for (int i = 0; i < matrices.Length; i++)
+            Random rand = new Random(1);
+            Matrix4[] matrices = new Matrix4[instanceCount];
+            for (int i = 0; i < instanceCount; i++)
             {
-                newMatrices[i] = matrices[i]
-                    * Matrix4.CreateTranslation(0, MathF.Sin((float)timeSinceStartup) * i, 0);
+                Transform instanceTransform = new Transform();
+                instanceTransform.scale = Vector3.One * (0.05f +
+                    MathF.Pow((float)rand.NextDouble(), 1.4f) * 1.95f);
+
+                float theta = (float)rand.NextDouble() * 2 * MathF.PI;
+                float height = (float)rand.NextDouble() * 2 - 1f;
+                instanceTransform.position = new Vector3(MathF.Cos(theta),
+                    height, MathF.Sin(theta)) * (25 + (float)rand.NextDouble() * 5 
+                    + 5f * MathF.Sin((float)timeSinceStartup));
+                instanceTransform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
+                matrices[i] = instanceTransform.TransformationMatrix();
             }
-            UBO.Update(newMatrices);
-            */
-            instancedRenderer.RenderInstancedObject(instanceable, instanceCount, 
-                camera.GetProjectionMatrix(), camera.CameraMatrix());
+            instanceable.GetMesh()!.UpdateInstancedTransformations(matrices);
 
             //Render UI canvas:
             GL.Disable(EnableCap.DepthTest);

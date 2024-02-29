@@ -54,28 +54,52 @@ namespace _3D_Renderer._Rendering._Renderers
                 }
 
                 //Draw bounding box for renderable:
-                if (renderable.showBoundingBox)
-                {
-                    renderable.CalculateBoundingBox(true);
-                    (Vector3 center, Vector3 size) boundingBox = renderable.GetMesh()!.GetBoundingBox();
-                    WireframeRenderer.RenderWireframeBox(boundingBox.center * renderable.transform.scale
-                        + renderable.transform.position,
-                        boundingBox.size * renderable.transform.scale,
-                        projectionMatrix, cameraMatrix);
-
-                    WireframeRenderer.RenderWireframeSphere(renderable.transform.position,
-                        renderable.GetMesh()!.GetBoundingRadius() * renderable.transform.scale,
-                        projectionMatrix, cameraMatrix);
-                }
+                DrawHitboxes(renderable, projectionMatrix, cameraMatrix);
 
                 int tris = renderable.ApplyRenderable(projectionMatrix, cameraMatrix);
                 if (tris <= 0) //If mesh is null skip this renderable.
                     continue;
 
-                GL.DrawElements(PrimitiveType.Triangles, tris,
-                    DrawElementsType.UnsignedInt, 0);
+                int instanceCount = renderable.GetMesh()!.InstanceCount();
+                if (instanceCount > 1)
+                {
+                    //Draw instanced:
+                    GL.DrawElementsInstanced(PrimitiveType.Triangles, tris,
+                        DrawElementsType.UnsignedInt, 0, instanceCount);
+                } 
+                else
+                {
+                    //Draw regular:
+                    GL.DrawElements(PrimitiveType.Triangles, tris,
+                        DrawElementsType.UnsignedInt, 0);
+                }
 
-                window.renderStats.NewDrawCall(tris);
+                window.renderStats.NewDrawCall(tris * instanceCount);
+            }
+        }
+
+        /// <summary>
+        /// Calls the <see cref="WireframeRenderer"/> for drawing hitboxes.
+        /// </summary>
+        /// <param name="renderable"></param>
+        /// <param name="projectionMatrix"></param>
+        /// <param name="cameraMatrix"></param>
+        private void DrawHitboxes(Renderable renderable, Matrix4 projectionMatrix, 
+            Matrix4 cameraMatrix)
+        {
+            //Draw bounding box for renderable:
+            if (renderable.showBoundingBox)
+            {
+                renderable.CalculateBoundingBox(true);
+                (Vector3 center, Vector3 size) boundingBox = renderable.GetMesh()!.GetBoundingBox();
+                WireframeRenderer.RenderWireframeBox(boundingBox.center * renderable.transform.scale
+                    + renderable.transform.position,
+                    boundingBox.size * renderable.transform.scale,
+                    projectionMatrix, cameraMatrix);
+
+                WireframeRenderer.RenderWireframeSphere(renderable.transform.position,
+                    renderable.GetMesh()!.GetBoundingRadius() * renderable.transform.scale,
+                    projectionMatrix, cameraMatrix);
             }
         }
     }

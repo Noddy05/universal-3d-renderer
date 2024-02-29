@@ -20,30 +20,41 @@ namespace _3D_Renderer._Rendering
         private static GameObject? wireframeSphere;
         private static Window? window;
 
+        /// <summary>
+        /// Sets up all the wireframe models needed to draw wireframes.
+        /// </summary>
         static WireframeRenderer()
         {
             UnlitMaterial material = new UnlitMaterial(Color4.Blue);
+            window = Program.GetWindow();
+
+            //Box:
             wireframeBox = new GameObject();
             wireframeBox.SetMesh(WireframeGeneration.SmoothCube());
             wireframeBox.SetMaterial(material);
 
+            //Sphere:
             wireframeSphere = new GameObject();
             Mesh fullCircleMesh = WireframeGeneration.Circle(64);
             Mesh circle = WireframeGeneration.Circle(64);
-            /*
-            circle.PermanentlyApplyTransformation(Matrix4.CreateFromQuaternion(
+            circle.PermanentlyTransformVertices(Matrix4.CreateFromQuaternion(
                 Quaternion.FromEulerAngles(new Vector3(MathF.PI / 2f, 0, 0))));
             fullCircleMesh += circle;
-            circle.PermanentlyApplyTransformation(Matrix4.CreateFromQuaternion(
+            circle.PermanentlyTransformVertices(Matrix4.CreateFromQuaternion(
                 Quaternion.FromEulerAngles(new Vector3(0, MathF.PI / 2f, 0))));
             fullCircleMesh += circle;
-            */
             wireframeSphere.SetMesh(fullCircleMesh);
             wireframeSphere.SetMaterial(material);
-
-            window = Program.GetWindow();
         }
 
+        /// <summary>
+        /// Renders a wireframe box in a set position, with a set size.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="size"></param>
+        /// <param name="projectionMatrix"></param>
+        /// <param name="cameraMatrix"></param>
+        /// <exception cref="Exception"></exception>
         public static void RenderWireframeBox(Vector3 position, Vector3 size,
             Matrix4 projectionMatrix, Matrix4 cameraMatrix)
         {
@@ -53,6 +64,15 @@ namespace _3D_Renderer._Rendering
 
             RenderWireframeObject(wireframeBox, position, size, projectionMatrix, cameraMatrix);
         }
+
+        /// <summary>
+        /// Renders a wireframe sphere in a set position, with a set radius.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="size"></param>
+        /// <param name="projectionMatrix"></param>
+        /// <param name="cameraMatrix"></param>
+        /// <exception cref="Exception"></exception>
         public static void RenderWireframeSphere(Vector3 position, Vector3 size,
             Matrix4 projectionMatrix, Matrix4 cameraMatrix)
         {
@@ -63,6 +83,14 @@ namespace _3D_Renderer._Rendering
             RenderWireframeObject(wireframeSphere, position, size, projectionMatrix, cameraMatrix);
         }
 
+        /// <summary>
+        /// Renders a specified wireframe mesh.
+        /// </summary>
+        /// <param name="renderable"></param>
+        /// <param name="position"></param>
+        /// <param name="size"></param>
+        /// <param name="projectionMatrix"></param>
+        /// <param name="cameraMatrix"></param>
         private static void RenderWireframeObject(GameObject renderable, Vector3 position, Vector3 size,
             Matrix4 projectionMatrix, Matrix4 cameraMatrix)
         {

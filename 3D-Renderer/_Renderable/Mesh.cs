@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.SymbolStore;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Sources;
@@ -28,6 +29,28 @@ namespace _3D_Renderer._Renderable
         private VBO instanceVBO;
         public VBO GetInstanceVBO() => instanceVBO;
 
+        private int instances = 1;
+        public int InstanceCount() => instances;
+        private int maxInstances = 1;
+        /// <summary>
+        /// This returns the number of instances allowed in the current <see cref="VBO"/>.
+        /// If you want more you must make a new <see cref="VBO"/>.
+        /// </summary>
+        /// <returns></returns>
+        public int MaxInstancesAllowed() => instances;
+        public void SetInstanceCount(int count)
+        {
+            if (count < 1)
+            {
+                throw new Exception("Mesh must have atleast 1 instance!");
+            }
+            if (count > maxInstances)
+            {
+                throw new Exception("Mesh VBO only allows for a maximum of"
+                    + $"{maxInstances}");
+            }
+            instances = count;
+        }
 
         private Vertex[] vertices = [];
         public Vertex[] GetVertices() => vertices;
@@ -78,15 +101,26 @@ namespace _3D_Renderer._Renderable
 
         public void CreateInstanceVBO(Matrix4[] transformations)
         {
+            instances = transformations.Length;
+            maxInstances = instances;
+            if(instanceVBO != null)
+            {
+                instanceVBO.Dispose();
+            }
             instanceVBO = new VBO(transformations, BufferUsageHint.StreamDraw);
             vao.BindInstanceData(instanceVBO);
         }
 
         public void UpdateInstancedTransformations(Matrix4[] transformations)
         {
-            if(instanceVBO == null)
+            if (instanceVBO == null)
             {
                 throw new Exception("This mesh is has no instanceVBO!");
+            }
+            if (transformations.Length > instances)
+            {
+                throw new Exception("Too many transformations matrices for VBO!"
+                    + $"Only {instances} transformations allowed.");
             }
             instanceVBO.SetBufferSubData(transformations, 0);
         }
@@ -126,6 +160,49 @@ namespace _3D_Renderer._Renderable
             return output;
         }
         #endregion
+
+        /// <summary>
+        /// Transforms vertices in the <see cref="VBO"/> only. 
+        /// This means that the vertices in the mesh is not affected by this change
+        /// </summary>
+        /// <param name="transformation"></param>
+        /// <returns>Transformed Vertices</returns>
+        public Vertex[] TransformVertices(Matrix4 transformation)
+        {
+            Vertex[] transformedVertices = new Vertex[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                transformedVertices[i] = vertices[i];
+                transformedVertices[i].vertexPosition = (new Vector4(vertices[i].vertexPosition, 1)
+                    * transformation).Xyz;
+            }
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, transformedVertices.Length * sizeof(float) * 8,
+                Vertex.VertexToFloatArray(transformedVertices));
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+
+            return transformedVertices;
+        }
+
+        /// <summary>
+        /// Transforms vertices in the <see cref="VBO"/> only. 
+        /// This means that the vertices in the mesh is not affected by this change
+        /// </summary>
+        /// <param name="transformation"></param>
+        /// <returns>Transformed Vertices</returns>
+        public void PermanentlyTransformVertices(Matrix4 transformation)
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i].vertexPosition = (new Vector4(vertices[i].vertexPosition, 1)
+                    * transformation).Xyz;
+            }
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float) * 8,
+                Vertex.VertexToFloatArray(vertices));
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        }
 
         #region Operators
         public static Mesh operator +(Mesh a, Vector3 offset)

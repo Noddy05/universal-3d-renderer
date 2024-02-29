@@ -5,14 +5,11 @@ in vec2 vTexCoords;
 
 out vec4 fragmentColor;
 
-uniform sampler2D textureSampler;
 uniform vec4 color;
 
 void main(){
     //Combine texture and color
-    vec4 sampledTexture = texture(textureSampler, vTexCoords);
-    vec4 unlitColor = color 
-        * sampledTexture;
+    vec4 unlitColor = color;
 
     fragmentColor = unlitColor;
 }

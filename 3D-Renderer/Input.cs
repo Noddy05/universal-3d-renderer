@@ -1,11 +1,5 @@
 ﻿using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static OpenTK.Graphics.OpenGL.GL;
 
 namespace _3D_Renderer
 {
@@ -16,9 +10,9 @@ namespace _3D_Renderer
             mouseButtons = new Dictionary<string, MouseButton>();
 
         private static Window window;
+
         /// <summary>
-        /// Should be called before attempting to use <see cref="Input"/> buttons.<br></br>
-        /// This initializes the button bindings.
+        /// Automatically instantiates <see cref="Input"/> and allows for easy input reading.
         /// </summary>
         static Input()
         {
@@ -40,7 +34,7 @@ namespace _3D_Renderer
         }
 
         /// <summary>
-        /// 
+        /// Returns WASD input or arrow keys
         /// </summary>
         /// <returns>
         /// <see cref="Vector2"/>(x, y) direction of the input.<br></br>

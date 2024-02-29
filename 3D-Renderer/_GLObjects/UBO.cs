@@ -32,17 +32,6 @@ namespace _3D_Renderer._GLObjects
             GL.BindBuffer(BufferTarget.UniformBuffer, 0);
         }
 
-        public static void Update(Matrix4[] matrices)
-        {
-            GL.BindBuffer(BufferTarget.UniformBuffer, handle);
-            for (int i = 0; i < matrices.Length; i++)
-            {
-                GL.BufferSubData(BufferTarget.UniformBuffer, 16 * i * sizeof(float),
-                    16 * sizeof(float), ref matrices[i]);
-            }
-            GL.BindBuffer(BufferTarget.UniformBuffer, 0);
-        }
-
         private static bool disposed = false;
         /// <summary>
         /// Disposes the <see cref="UBO"/> object.<br/>

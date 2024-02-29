@@ -1,9 +1,4 @@
 ﻿using OpenTK.Graphics.OpenGL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace _3D_Renderer._Shading._Materials
 {
@@ -12,6 +7,10 @@ namespace _3D_Renderer._Shading._Materials
         public int textureHandle = -1;
         private int UL_textureSampler = -1;
 
+        /// <summary>
+        /// Creates new <see cref="CubemapMaterial"/> with a cubemap texture handle.
+        /// </summary>
+        /// <param name="textureHandle"></param>
         public CubemapMaterial(int textureHandle)
             : base(new Shader(@"../../../_Assets/_Built-In/_Shaders/_Cubemap/cubemap.vert",
                 @"../../../_Assets/_Built-In/_Shaders/_Cubemap/cubemap.frag"))

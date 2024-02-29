@@ -1,7 +1,5 @@
 #version 330 core
 
-#include "C:/Users/noah0/source/repos/3D-Renderer/3D-Renderer/_Assets/_Built-In/_Shaders/test_library.glsl"
-
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 textureCoords;

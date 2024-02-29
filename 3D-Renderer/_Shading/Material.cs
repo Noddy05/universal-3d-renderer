@@ -1,11 +1,4 @@
-﻿using _3D_Renderer._Behaviour;
-using OpenTK.Graphics.OpenGL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
+﻿using OpenTK.Graphics.OpenGL;
 
 namespace _3D_Renderer._Shading
 {
@@ -13,13 +6,17 @@ namespace _3D_Renderer._Shading
     {
         public Shader shader;
 
+        /// <summary>
+        /// Creates a new material from a specified <see cref="Shader"/>.
+        /// </summary>
+        /// <param name="shader"></param>
         public Material(Shader shader)
         {
             this.shader = shader;
         }
 
         /// <summary>
-        /// Binds shader and others (uniforms...) depends on the Material
+        /// Binds <see cref="Shader"/> and others (uniforms...) depends on the <see cref="Material"/>.
         /// </summary>
         public virtual void ApplyMaterial()
         {
