@@ -91,7 +91,7 @@ namespace _3D_Renderer._Rendering._Renderers
             if (renderable.showBoundingBox)
             {
                 renderable.CalculateBoundingBox(true);
-                (Vector3 center, Vector3 size) boundingBox = renderable.GetMesh()!.GetBoundingBox();
+                (Vector3 center, Vector3 size) boundingBox = renderable.GetBoundingBox();
                 WireframeRenderer.RenderWireframeBox(boundingBox.center * renderable.transform.scale
                     + renderable.transform.position,
                     boundingBox.size * renderable.transform.scale,

@@ -64,7 +64,7 @@ namespace _3D_Renderer._Renderable
             vbo = new VBO(vertices, hint);
             vao.BindVertexData(vbo);
             GL.BindVertexArray(0);
-            UpdateBounding(vertices);
+            UpdateBoundingRadius(vertices);
         }
 
         private int[] indices = [];
@@ -135,7 +135,7 @@ namespace _3D_Renderer._Renderable
                 indices[i] = indices[i + 1];
                 indices[i + 1] = temp;
             }
-            SetIndices(indices, BufferUsageHint.StaticCopy);
+            SetIndices(indices, BufferUsageHint.StaticDraw);
         }
 
         public Mesh CopyAsWireframe()
@@ -143,7 +143,7 @@ namespace _3D_Renderer._Renderable
             Mesh output = new Mesh();
             Vertex[] verticesCopied = new Vertex[vertices.Length];
             Array.Copy(vertices, verticesCopied, vertices.Length);
-            output.SetVertices(vertices, BufferUsageHint.StaticCopy);
+            output.SetVertices(vertices, BufferUsageHint.StaticDraw);
             int[] indices = ibo.GetIndices();
             int[] newIndices = new int[indices.Length * 2];
             for (int i = 0; i < indices.Length; i += 3)
@@ -156,7 +156,7 @@ namespace _3D_Renderer._Renderable
                 newIndices[i * 2 + 5] = indices[i];
             }
             output.name = name;
-            output.SetIndices(newIndices, BufferUsageHint.StaticCopy);
+            output.SetIndices(newIndices, BufferUsageHint.StaticDraw);
             return output;
         }
         #endregion
@@ -220,8 +220,8 @@ namespace _3D_Renderer._Renderable
                 newVertices[i] = aVerts[i];
                 newVertices[i].vertexPosition += offset;
             }
-            merged.SetVertices(newVertices, BufferUsageHint.StaticCopy);
-            merged.SetIndices(aTris, BufferUsageHint.StaticCopy);
+            merged.SetVertices(newVertices, BufferUsageHint.StaticDraw);
+            merged.SetIndices(aTris, BufferUsageHint.StaticDraw);
 
             return merged;
         }
@@ -258,8 +258,8 @@ namespace _3D_Renderer._Renderable
             {
                 newIndices[i + aTris.Length] = bTris[i] + aVerts.Length;
             }
-            merged.SetVertices(newVertices, BufferUsageHint.StaticCopy);
-            merged.SetIndices(newIndices, BufferUsageHint.StaticCopy);
+            merged.SetVertices(newVertices, BufferUsageHint.StaticDraw);
+            merged.SetIndices(newIndices, BufferUsageHint.StaticDraw);
 
             return merged;
         }
@@ -282,48 +282,13 @@ namespace _3D_Renderer._Renderable
             Mesh copy = new Mesh();
             Vertex[] verticesCopied = new Vertex[vertices.Length];
             Array.Copy(vertices, verticesCopied, vertices.Length);
-            copy.SetVertices(verticesCopied, BufferUsageHint.StaticCopy);
-            copy.SetIndices(ibo.GetIndices(), BufferUsageHint.StaticCopy);
+            copy.SetVertices(verticesCopied, BufferUsageHint.StaticDraw);
+            copy.SetIndices(ibo.GetIndices(), BufferUsageHint.StaticDraw);
             copy.name = name;
             return copy;
         }
 
-        #region Vertex Transformations
-        /*
-        public void ApplyTransformation(Matrix4 transformation, bool updateBoundingBox)
-        {
-            Vertex[] transformedVertices = vbo.TransformVertices(transformation);
-            if (!updateBoundingBox)
-                return;
-
-            Vertex[] transformedVerticesCloned = new Vertex[transformedVertices.Length];
-            Array.Copy(transformedVertices, transformedVerticesCloned, transformedVertices.Length);
-            UpdateBounding(transformedVerticesCloned);
-        }
-        public void PermanentlyApplyTransformation(Matrix4 transformation)
-        {
-            vbo.PermanentlyTransformVertices(transformation);
-            vertices = new Vertex[vbo.GetVertices().Length];
-            Array.Copy(vbo.GetVertices(), vertices, vbo.GetVertices().Length);
-            UpdateBounding(vertices);
-        }
-        */
-        #endregion
-
         #region Bounding box
-
-        protected (Vector3 center, Vector3 size) boundingBox;
-        public (Vector3 center, Vector3 size) GetBoundingBox() => boundingBox;
-
-        public void UpdateBounding(Vertex[] vertices)
-        {
-            boundingRadius = CalculateBoundingRadius(vertices);
-            boundingBox = CalculateBoundingBox(Matrix4.Identity, vertices);
-        }
-        public void UpdateBoundingBox(Vertex[] vertices, Matrix4 rotation)
-        {
-            boundingBox = CalculateBoundingBox(rotation, vertices);
-        }
         public void UpdateBoundingRadius(Vertex[] vertices)
         {
             boundingRadius = CalculateBoundingRadius(vertices);
@@ -344,7 +309,7 @@ namespace _3D_Renderer._Renderable
             return MathF.Sqrt(maxRadiusSquared);
         }
 
-        private (Vector3 center, Vector3 size) CalculateBoundingBox(Matrix4 rotationMatrix,
+        public (Vector3 center, Vector3 size) CalculateBoundingBox(Matrix4 rotationMatrix,
             Vertex[] vertices)
         {
             float minX = float.MaxValue, maxX = float.MinValue;
@@ -382,7 +347,7 @@ namespace _3D_Renderer._Renderable
             IBO oldIBO = ibo;
             Vertex[] verticesCopied = new Vertex[vertices.Length];
             Array.Copy(vertices, verticesCopied, vertices.Length);
-            SetVertices(verticesCopied, BufferUsageHint.StaticCopy);
+            SetVertices(verticesCopied, BufferUsageHint.StaticDraw);
             oldVAO.Dispose();
 
             int[] indices = ibo.GetIndices();
@@ -396,7 +361,7 @@ namespace _3D_Renderer._Renderable
                 newIndices[i * 2 + 4] = indices[i + 2];
                 newIndices[i * 2 + 5] = indices[i];
             }
-            SetIndices(newIndices, BufferUsageHint.StaticCopy);
+            SetIndices(newIndices, BufferUsageHint.StaticDraw);
             oldIBO.Dispose();
             return this;
         }

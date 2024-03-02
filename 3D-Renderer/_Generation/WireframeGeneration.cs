@@ -19,7 +19,7 @@ namespace _3D_Renderer._Generation
                 0, 1, 1, 2,
                 2, 3, 3, 0
             ];
-            quad.SetIndices(indices, BufferUsageHint.StaticCopy);
+            quad.SetIndices(indices, BufferUsageHint.StaticDraw);
 
             return quad;
         }
@@ -45,7 +45,7 @@ namespace _3D_Renderer._Generation
                 0, 1, 4, 5,
                 7, 6, 2, 3
             ];
-            cube.SetIndices(indices, BufferUsageHint.StaticCopy);
+            cube.SetIndices(indices, BufferUsageHint.StaticDraw);
 
             return cube;
         }
@@ -70,7 +70,7 @@ namespace _3D_Renderer._Generation
             indices[(vertices - 1) * 2    ] = 0;
             indices[(vertices - 1) * 2 + 1] = vertices - 1;
             #endregion
-            circle.SetIndices(indices, BufferUsageHint.StaticCopy);
+            circle.SetIndices(indices, BufferUsageHint.StaticDraw);
 
             return circle;
         }
@@ -106,7 +106,7 @@ namespace _3D_Renderer._Generation
                 }
             }
             #endregion
-            plane.SetIndices(indices, BufferUsageHint.StaticCopy);
+            plane.SetIndices(indices, BufferUsageHint.StaticDraw);
 
             return plane;
         }

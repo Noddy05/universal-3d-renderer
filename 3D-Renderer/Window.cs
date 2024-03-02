@@ -17,6 +17,7 @@ using _3D_Renderer._Generation;
 using _3D_Renderer._Renderable._Cubemap;
 using _3D_Renderer._Behaviour;
 using _3D_Renderer._GLObjects;
+using _3D_Renderer._GLObjects._UBO;
 
 namespace _3D_Renderer
 {
@@ -128,6 +129,13 @@ namespace _3D_Renderer
             //Loading has finished, show application:
             IsVisible = true;
             CursorState = CursorState.Grabbed;
+
+            UBO.shadowData.shadowColor = new Color4(19, 22, 46, 255);
+            UBO.shadowData.minLightStrength = 0.1f;
+            UBO.directionalLightData.SetLightColor(0, Color4.White);
+            UBO.directionalLightData.SetLightStrength(0, 1);
+            UBO.directionalLightData.SetLightCastFromDirection(0, new Vector3(0, 1, 0).Normalized());
+            UBO.UpdateUBO();
         }
 
         /// <summary>
@@ -141,7 +149,7 @@ namespace _3D_Renderer
 
         private GameObject temp;
         private GameObject temp2;
-        private int instanceCount = 30000;
+        private int instanceCount = 5000;
         private void PopulateScene()
         {
             sceneFBO = new FBO(new Vector2i((int)(Size.X * 0.3f), (int)(Size.Y * 0.3f)));
@@ -191,31 +199,16 @@ namespace _3D_Renderer
             temp2.transform.position = new Vector3(0, 0, 5f);
             scene.renderables.Add(temp2);
 
-            //Random heads:
-            Random rand = new Random();
-            for (int i = 0; i < 500; i++)
-            {
-                gameObject.transform.scale = Vector3.One * (0.05f +
-                    MathF.Pow((float)rand.NextDouble(), 1.4f) * 1.95f);
-
-                float theta = (float)rand.NextDouble() * 2 * MathF.PI;
-                float height = (float)rand.NextDouble() * 2 - 1f;
-                gameObject.transform.position = new Vector3(MathF.Cos(theta),
-                    height, MathF.Sin(theta)) * (25 + (float)rand.NextDouble() * 5);
-                gameObject.transform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
-
-                //scene.renderables.Add(gameObject.Clone());
-            }
 
             instanceable = gameObject.Clone();
-            instanceable.SetMesh(MeshGeneration.SmoothCube());
+            instanceable.SetMesh(secondMesh);
             instanceable.transform.position = Vector3.Zero;
             instanceable.transform.rotation = Vector3.Zero;
             instanceable.transform.scale = Vector3.One;
             Material particleMaterial = new ParticleMaterial(Color4.White);
             instanceable.SetMaterial(particleMaterial);
 
-            rand = new Random(1);
+            Random rand = new Random(1);
             Matrix4[] matrices = new Matrix4[instanceCount];
             for(int i = 0; i < instanceCount; i++)
             {
@@ -232,10 +225,7 @@ namespace _3D_Renderer
             }
             instanceable.GetMesh()!.CreateInstanceVBO(matrices);
             instanceable.cull = false;
-            for(int i = 0; i < 100; i++)
-            {
-                scene.renderables.Add(instanceable);
-            }
+            scene.renderables.Add(instanceable);
 
             #endregion
 
@@ -287,9 +277,6 @@ namespace _3D_Renderer
                 objectToUnload.Dispose();
                 Console.WriteLine($"Unloaded object {objectToUnload.GetType()} : EasyUnload");
             }
-
-            //Dispose UBO:
-            UBO.Dispose();
 
             base.OnUnload();
         }

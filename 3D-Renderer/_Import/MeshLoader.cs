@@ -83,8 +83,8 @@ namespace _3D_Renderer._Import
 
             Mesh mesh = new Mesh();
             mesh.name = objectName;
-            mesh.SetVertices(vertices.ToArray(), BufferUsageHint.StaticCopy);
-            mesh.SetIndices(indices.ToArray(), BufferUsageHint.StaticCopy);
+            mesh.SetVertices(vertices.ToArray(), BufferUsageHint.StaticDraw);
+            mesh.SetIndices(indices.ToArray(), BufferUsageHint.StaticDraw);
 
             return mesh;
         }

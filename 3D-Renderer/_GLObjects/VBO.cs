@@ -25,7 +25,7 @@ namespace _3D_Renderer._GLObjects
         /// <param name="matrices"></param>
         /// <param name="bufferUsageHint"></param>
         public VBO(Vertex[] vertices, BufferUsageHint bufferUsageHint)
-            : this(VerticesToFloatArray(vertices), bufferUsageHint) { }
+            : this(ToFloatArray(vertices), bufferUsageHint) { }
         /// <summary>
         /// Automatically converts <see cref="Matrix4"/> array to <see cref="float"/> array
         /// and creates new <see cref="VBO"/> object.
@@ -33,7 +33,7 @@ namespace _3D_Renderer._GLObjects
         /// <param name="matrices"></param>
         /// <param name="bufferUsageHint"></param>
         public VBO(Matrix4[] matrices, BufferUsageHint bufferUsageHint)
-            : this(MatricesToFloatArray(matrices), bufferUsageHint) { }
+            : this(ToFloatArray(matrices), bufferUsageHint) { }
 
         /// <summary>
         /// Creates new <see cref="VBO"/> object.<br/>
@@ -63,92 +63,26 @@ namespace _3D_Renderer._GLObjects
         }
 
         public void SetBufferSubData(Vertex[] vertices, int offset)
-            => SetBufferSubData(VerticesToFloatArray(vertices), offset);
+            => SetBufferSubData(ToFloatArray(vertices), offset);
         public void SetBufferSubData(Matrix4[] matrices, int offset)
-            => SetBufferSubData(MatricesToFloatArray(matrices), offset);
+            => SetBufferSubData(ToFloatArray(matrices), offset);
         public void SetBufferSubData(float[] data, int offset)
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, handle);
             GL.BufferSubData(BufferTarget.ArrayBuffer, offset, data.Length * sizeof(float), data);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         }
-        /*
-        public VBO(Matrix4[] matrices, BufferUsageHint bufferUsageHint)
-        {
-            float[] matricesAsFloats = new float[16 * matrices.Length];
-            for(int i = 0; i < matrices.Length; i++)
-            {
-                float[] matrixAsFloats = MatrixToFloatArray(matrices[i]);
-                for (int j = 0; j < 16; j++)
-                {
-                    matricesAsFloats[i * 16 + j] = matrixAsFloats[j];
-                }
-            }
 
-            handle = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, handle);
-            GL.BufferData(BufferTarget.ArrayBuffer, matricesAsFloats.Length * sizeof(float),
-                matricesAsFloats, bufferUsageHint);
-
-            //Unbind buffer:
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-        }
-        */
-
-        /*
-        /// <summary>
-        /// This is extremely slow at high number of vertices.
-        /// </summary>
-        /// <param name="transformation"></param>
-        /// <returns>Transformed Vertices</returns>
-        public Vertex[] TransformVertices(Matrix4 transformation)
-        {
-            Vertex[] transformedVertices = new Vertex[vertices.Length];
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                transformedVertices[i] =
-                    new Vertex(vertices[i].vertexPosition,
-                    vertices[i].vertexNormal,
-                    vertices[i].textureCoordinate);
-
-                transformedVertices[i].vertexPosition = (new Vector4(vertices[i].vertexPosition, 1)
-                    * transformation).Xyz;
-            }
-            GL.BindBuffer(BufferTarget.ArrayBuffer, handle);
-            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, transformedVertices.Length * sizeof(float) * 8,
-                Vertex.VertexToFloatArray(transformedVertices));
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-
-            return transformedVertices;
-        }
-        /// <summary>
-        /// This is extremely slow at high number of vertices.
-        /// </summary>
-        /// <param name="transformation"></param>
-        public void PermanentlyTransformVertices(Matrix4 transformation)
-        {
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertices[i].vertexPosition = (new Vector4(vertices[i].vertexPosition, 1)
-                    * transformation).Xyz;
-            }
-            GL.BindBuffer(BufferTarget.ArrayBuffer, handle);
-            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float) * 8,
-                Vertex.VertexToFloatArray(vertices));
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-        }
-        */
-
-        public static float[] MatricesToFloatArray(Matrix4[] matrix)
+        public static float[] ToFloatArray(Matrix4[] matrix)
         {
             List<float> matricesAsFloats = new List<float>();
             for(int i = 0; i < matrix.Length; i++) {
-                matricesAsFloats.AddRange(MatrixToFloatArray(matrix[i]));
+                matricesAsFloats.AddRange(ToFloatArray(matrix[i]));
             }
 
             return matricesAsFloats.ToArray();
         }
-        public static float[] MatrixToFloatArray(Matrix4 matrix)
+        public static float[] ToFloatArray(Matrix4 matrix)
         {
             Vector4[] vectors = [
                 matrix.Row0,
@@ -166,7 +100,7 @@ namespace _3D_Renderer._GLObjects
             }
             return matrixAsFloats;
         }
-        public static float[] VerticesToFloatArray(Vertex[] vertices)
+        public static float[] ToFloatArray(Vertex[] vertices)
         {
             List<float> vertexList = new List<float>();
             foreach (Vertex vertex in vertices)
@@ -175,6 +109,18 @@ namespace _3D_Renderer._GLObjects
             }
 
             return vertexList.ToArray();
+        }
+        public static float[] ToFloatArray(Vector3 vector)
+        {
+            return [vector.X, vector.Y, vector.Z];
+        }
+        public static float[] ToFloatArray(Color4 color)
+        {
+            return [color.R, color.G, color.B, color.A];
+        }
+        public static float[] Color4ToColor3FloatArray(Color4 color)
+        {
+            return [color.R, color.G, color.B];
         }
 
         private bool disposed = false;

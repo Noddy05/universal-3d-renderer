@@ -26,8 +26,8 @@ namespace _3D_Renderer._Generation
                 0, 2, 1,
                 0, 3, 2,
             ];
-            quad.SetVertices(vertices, BufferUsageHint.StaticCopy);
-            quad.SetIndices(indices, BufferUsageHint.StaticCopy);
+            quad.SetVertices(vertices, BufferUsageHint.StaticDraw);
+            quad.SetIndices(indices, BufferUsageHint.StaticDraw);
 
             return quad;
         }
@@ -57,8 +57,8 @@ namespace _3D_Renderer._Generation
                 0, 2, 1,
                 0, 3, 2,
             ];
-            quad.SetVertices(vertices, BufferUsageHint.StaticCopy);
-            quad.SetIndices(indices, BufferUsageHint.StaticCopy);
+            quad.SetVertices(vertices, BufferUsageHint.StaticDraw);
+            quad.SetIndices(indices, BufferUsageHint.StaticDraw);
 
             return quad;
         }
@@ -110,8 +110,8 @@ namespace _3D_Renderer._Generation
             ];
 
             Mesh cube = new Mesh();
-            cube.SetVertices(vertices, BufferUsageHint.StaticCopy);
-            cube.SetIndices(indices, BufferUsageHint.StaticCopy);
+            cube.SetVertices(vertices, BufferUsageHint.StaticDraw);
+            cube.SetIndices(indices, BufferUsageHint.StaticDraw);
 
             return cube;
         }
@@ -142,7 +142,7 @@ namespace _3D_Renderer._Generation
             #region Indices
 
             #endregion
-            circle.SetVertices(verts, BufferUsageHint.StaticCopy);
+            circle.SetVertices(verts, BufferUsageHint.StaticDraw);
             //circle.SetIndices(indices, BufferUsageHint.StaticCopy);
 
             return circle;
@@ -185,8 +185,8 @@ namespace _3D_Renderer._Generation
                 }
             }
             #endregion
-            plane.SetVertices(vertices, BufferUsageHint.StaticCopy);
-            plane.SetIndices(indices, BufferUsageHint.StaticCopy);
+            plane.SetVertices(vertices, BufferUsageHint.StaticDraw);
+            plane.SetIndices(indices, BufferUsageHint.StaticDraw);
 
             return plane;
         }

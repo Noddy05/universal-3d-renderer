@@ -61,7 +61,10 @@ namespace _3D_Renderer._Renderable
                 && !transform.RotationChangedSinceLastCheck())
                 return;
 
-            mesh.UpdateBoundingBox(mesh.GetVertices(), transform.RotationMatrix());
+            boundingBox = mesh.CalculateBoundingBox(transform.RotationMatrix(), mesh.GetVertices());
         }
+
+        protected (Vector3 center, Vector3 size) boundingBox;
+        public (Vector3 center, Vector3 size) GetBoundingBox() => boundingBox;
     }
 }

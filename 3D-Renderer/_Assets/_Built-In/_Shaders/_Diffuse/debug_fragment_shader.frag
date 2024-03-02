@@ -1,4 +1,4 @@
-#version 330 core
+#version 420 core
 
 in vec3 vWorldPosition;
 in vec3 vCameraPosition;
@@ -16,6 +16,24 @@ uniform float reflectivity = 1;
 uniform float specularHighlightDamper = 15;
 uniform vec4 color;
 
+
+layout(std140, binding = 0) uniform uShadowInformation {
+	vec3 shadowColor;
+	float minLight;
+} shadow_info;
+
+//Allows for 16 directional lights
+struct DirectionalLight {
+	vec3 directionalLightColor;
+	float directionalLightStrength;
+	vec3 directionalLightDirection;
+	float _DUMMY_;
+};
+layout(std140, binding = 1) uniform uDirectionalLight {
+	DirectionalLight[16] directionalLights;
+} directional_light;
+
+
 void main(){
     vec3 toCamera = vCameraPosition - vWorldPosition;
 
@@ -26,12 +44,15 @@ void main(){
     vec3 normal = vertexNormal;
 
     //light and shadow settings:
-    vec4 lightColor = vec4(1);
-    vec4 shadowColor = vec4(19, 22, 46, 255) / 255.0 * 5;
-    float minLight = 0.1;
+    vec4 shadowColor = vec4(shadow_info.shadowColor, 1);
+    float minLight = shadow_info.minLight;
 
+    vec4 lightColor = vec4(directional_light.directionalLights[0].directionalLightColor, 1);
+    vec3 lightDirection = directional_light.directionalLights[0].directionalLightDirection;
     //Calculate brightness from directional light (and shadow):
-    float lightStrength = max(-dot(vLightDirection, normal), 0);
+    float lightStrength = max(dot(lightDirection, normal), 0) 
+        * directional_light.directionalLights[0].directionalLightStrength;
+
     float lightStrengthClamped = max(lightStrength, minLight);
     float shadowColorFalloff = 0.55; //Must be higher than minLight
     float shadowColorStrength = shadowColorFalloff * pow(minLight / shadowColorFalloff, 
@@ -40,7 +61,7 @@ void main(){
     //Calculate specular highlights:
     vec3 refractionDirection = refract(-normalize(toCamera), normalize(normal), 1/1.33);
     vec3 reflectedDirection = reflect(-normalize(toCamera), normalize(normal));
-    float specularBrightness = max(dot(reflectedDirection, -vLightDirection), 0);
+    float specularBrightness = max(dot(reflectedDirection, lightDirection), 0);
     float specularHighlight = pow(specularBrightness, specularHighlightDamper) * reflectivity;
 
     //Combine texture and color
