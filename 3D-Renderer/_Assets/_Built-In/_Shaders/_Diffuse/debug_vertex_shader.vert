@@ -10,29 +10,42 @@ uniform mat4 cameraMatrix;
 
 uniform vec4 clippingPlane;
 
-out vec3 vWorldPosition;
-out vec3 vCameraPosition;
-out vec3 vLightDirection;
-out vec3 vNormal;
-out vec2 vTexCoords;
+out DATA {
+	vec2 vTexCoords;
+	mat4 projectionMatrix;
+	mat4 transformationMatrix;
+	mat4 cameraMatrix;
+
+	vec3 lightCastFromDirection;
+	vec3 cameraPosition;
+
+	vec3 vNormal;
+} data_out;
+
+
+//Allows for 16 directional lights
+struct DirectionalLight {
+	vec3 lightColor;
+	float lightStrength;
+	vec3 lightDirection;
+	float _DUMMY_;
+};
+layout(std140, binding = 1) uniform _uDirectionalLight {
+	DirectionalLight[16] directionalLights;
+} directional_light;
 
 void main() {
-    vec3 worldPosition = (transformationMatrix * vec4(position, 1)).xyz;
-    gl_Position = projectionMatrix * cameraMatrix * vec4(worldPosition, 1);
+    vec3 worldPosition = (cameraMatrix * transformationMatrix * vec4(position, 1)).xyz;
+    gl_Position = vec4(worldPosition, 1);
 
     //gl_ClipDistance[0] = dot(worldPosition, clippingPlane.xyz) + clippingPlane.w;
 
-    //The direction the sun is pointing:
-    vec3 lightDirection = normalize(vec3(0, 0, -1));
-    vLightDirection = lightDirection;
+	data_out.cameraMatrix = cameraMatrix;
+    data_out.cameraPosition = (inverse(cameraMatrix) * vec4(vec3(0), 1.0)).xyz;
+    data_out.vTexCoords = textureCoords;
+	data_out.projectionMatrix = projectionMatrix;
+	data_out.transformationMatrix = transformationMatrix;
+	data_out.lightCastFromDirection = directional_light.directionalLights[0].lightDirection;
 
-    vCameraPosition = (inverse(cameraMatrix) * vec4(vec3(0), 1.0)).xyz;
-    vWorldPosition = worldPosition;
-    
-	mat3 normalMatrix = mat3(transformationMatrix);
-	normalMatrix = inverse(normalMatrix);
-	normalMatrix = transpose(normalMatrix);
-	vNormal = normalize(normalMatrix * normal).xyz;
-
-    vTexCoords = textureCoords;
+	data_out.vNormal = normal;
 }

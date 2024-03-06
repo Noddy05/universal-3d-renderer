@@ -12,8 +12,10 @@ namespace _3D_Renderer._Import
         public int width, height;
         public int xOffset, yOffset;
         public int xAdvance;
+        public int page;
 
-        public FontCharacter(int x, int y, int width, int height, int xOffset, int yOffset, int xAdvance)
+        public FontCharacter(int x, int y, int width, int height, int xOffset, 
+            int yOffset, int xAdvance, int page)
         {
             this.x = x;
             this.y = y;
@@ -22,13 +24,14 @@ namespace _3D_Renderer._Import
             this.xOffset = xOffset;
             this.yOffset = yOffset;
             this.xAdvance = xAdvance;
+            this.page = page;
         }
 
         public override string ToString()
         {
             return $"Font Character: \nTexCoords: ({x}, {y})\n" +
                 $"Size: ({width}, {height})\nOffset: ({xOffset}, {yOffset})\n" +
-                $"xAdvance: {xAdvance}";
+                $"xAdvance: {xAdvance}\n" + $"Page: {page}";
         }
     }
 }

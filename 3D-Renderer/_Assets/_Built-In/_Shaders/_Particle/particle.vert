@@ -5,8 +5,6 @@ layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 textureCoords;
 layout (location = 3) in mat4 instanceTransformation;
 
-#include "../../../_Assets/_Built-In/_Shaders/ubo.glsl"; //UBO info
-
 uniform mat4 projectionMatrix;
 uniform mat4 cameraMatrix;
 

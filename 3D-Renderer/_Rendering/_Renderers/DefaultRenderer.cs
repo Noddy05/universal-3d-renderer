@@ -18,11 +18,6 @@ namespace _3D_Renderer._Rendering._Renderers
     /// </summary>
     internal class DefaultRenderer : Renderer
     {
-        public DefaultRenderer()
-        {
-
-        }
-
         public override void RenderCollection(Collection collection, Camera camera,
             Matrix4 projectionMatrix, Matrix4 cameraMatrix)
         {

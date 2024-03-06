@@ -9,8 +9,14 @@ namespace _3D_Renderer._Import
 {
     internal class TextureLoader
     {
-        
-        public static int LoadTexture(string filePath) 
+        public static int LoadTexture(string filePath, float mipmapLODBias)
+        {
+            int textureHandle = LoadTexture(filePath, true);
+            SetLODBias(textureHandle, mipmapLODBias);
+            return textureHandle;
+        }
+
+        public static int LoadTexture(string filePath, bool generateMipmaps = true) 
             //AI generated, using ChatGPT
         {
             if (!File.Exists(filePath))
@@ -39,7 +45,32 @@ namespace _3D_Renderer._Import
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0,
                 PixelFormat.Bgra, PixelType.UnsignedByte, imageData);
 
+            if (generateMipmaps) { 
+                GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, 
+                    (int)TextureMinFilter.LinearMipmapLinear);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
+                    (int)TextureMagFilter.Linear);
+
+                SetLODBias(textureId, -1f);
+            }
+
             return textureId;
+        }
+
+        /// <summary>
+        /// Changes how subtle the mipmapping of a texture is.
+        /// </summary>
+        /// <param name="textureHandle">The handle of the texture you want to modify</param>
+        /// <param name="bias">High bias will make the mipmapping effect very noticable, whereas
+        /// low/negative biases will make it more subtle.</param>
+        public static void SetLODBias(int textureHandle, float bias)
+        {
+            GL.BindTexture(TextureTarget.Texture2D, textureHandle);
+
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureLodBias,
+                bias);
         }
 
         /// <summary>

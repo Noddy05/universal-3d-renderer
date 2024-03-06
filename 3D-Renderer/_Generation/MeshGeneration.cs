@@ -17,10 +17,10 @@ namespace _3D_Renderer._Generation
             //   |    \ |
             //   3------2
             Vertex[] vertices = [
-                new Vertex(new Vector3(-1,  1, 0), new Vector3(0, 0, 1), new Vector2(0, 1)), 
-                new Vertex(new Vector3( 1,  1, 0), new Vector3(0, 0, 1), new Vector2(1, 1)), 
-                new Vertex(new Vector3( 1, -1, 0), new Vector3(0, 0, 1), new Vector2(1, 0)), 
-                new Vertex(new Vector3(-1, -1, 0), new Vector3(0, 0, 1), new Vector2(0, 0)), 
+                new Vertex(new Vector3(-1,  1, 0), new Vector3(0, 0, 1), new Vector2(0, 0)), 
+                new Vertex(new Vector3( 1,  1, 0), new Vector3(0, 0, 1), new Vector2(1, 0)), 
+                new Vertex(new Vector3( 1, -1, 0), new Vector3(0, 0, 1), new Vector2(1, 1)), 
+                new Vertex(new Vector3(-1, -1, 0), new Vector3(0, 0, 1), new Vector2(0, 1)), 
             ];
             int[] indices = [
                 0, 2, 1,
@@ -89,24 +89,15 @@ namespace _3D_Renderer._Generation
             }
 
             int[] indices = [
-                // Right
-                1, 2, 6, 
-                6, 5, 1, 
-                // Left
-                0, 4, 7, 
-                7, 3, 0, 
-                // Top
-                6, 7, 4, 
-                5, 6, 4, 
-                // Bottom
-                0, 3, 2, 
-                1, 0, 2, 
-                // Back
-                1, 5, 0, 
-                5, 4, 0, 
-                // Front
-                6, 3, 7, 
-                3, 6, 2, 
+                // Right   // Left
+                1, 2, 6,   0, 4, 7, 
+                6, 5, 1,   7, 3, 0,
+                // Top     // Bottom
+                6, 7, 4,   0, 3, 2, 
+                5, 6, 4,   1, 0, 2,
+                // Back    // Front
+                1, 5, 0,   6, 3, 7, 
+                5, 4, 0,   3, 6, 2, 
             ];
 
             Mesh cube = new Mesh();
@@ -118,8 +109,8 @@ namespace _3D_Renderer._Generation
 
         #endregion
 
-        #region Complex Generations
-        public static Mesh Circle(int vertices)
+        #region More Complex Generations
+        public static Mesh Circle(int vertices, bool centerVertex = false)
         {
             //TODO add indices:
 
@@ -127,23 +118,55 @@ namespace _3D_Renderer._Generation
                 throw new Exception("Trying to generate circle mesh failed! " +
                     "(MeshGeneration.CircleMesh(a) requires a ≥ 3)");
 
-            Mesh circle = new Mesh();
-
-            Vertex[] verts = new Vertex[vertices];
+            int centerVertexI = (centerVertex ? 1 : 0);
+            Vertex[] verts = new Vertex[vertices + centerVertexI];
             #region Vertices
             for (int i = 0; i < vertices; i++)
             {
                 float px = i / (float)vertices * 2 * MathF.PI;
                 Vector3 pos = new Vector3(MathF.Cos(px), 0, MathF.Sin(px));
-                verts[i] = new Vertex(pos, new Vector3(0, 1, 0), 
+                verts[i + centerVertexI] = new Vertex(pos, Vector3.UnitY, 
                     new Vector2(pos.X, pos.Z));
             }
+            if (centerVertex)
+            {
+                verts[0] = new Vertex(Vector3.Zero, Vector3.UnitY, Vector2.Zero);
+            }
             #endregion
+            int[] indices;
             #region Indices
+            if(centerVertex)
+            {
+                indices = new int[3 * vertices];
+                for(int i = 0; i < vertices; i++)
+                {
+                    indices[3 * i + 0] = 0;
+                    indices[3 * i + 1] = i + 1;
+                    if(i + 1 >= vertices)
+                    {
+                        indices[3 * i + 2] = 1;
+                    } 
+                    else
+                    {
+                        indices[3 * i + 2] = i + 2;
+                    }
+                }
+            } 
+            else
+            {
+                indices = new int[3 * (vertices - 2)];
+                for (int i = 0; i < vertices - 2; i++)
+                {
+                    indices[3 * i + 0] = 0;
+                    indices[3 * i + 1] = i + 2;
+                    indices[3 * i + 2] = i + 1;
+                }
+            }
 
             #endregion
+            Mesh circle = new Mesh();
             circle.SetVertices(verts, BufferUsageHint.StaticDraw);
-            //circle.SetIndices(indices, BufferUsageHint.StaticCopy);
+            circle.SetIndices(indices, BufferUsageHint.StaticDraw);
 
             return circle;
         }
@@ -167,7 +190,7 @@ namespace _3D_Renderer._Generation
                     float vy = y / (float)(yDivisions + 1) - 0.5f;
                     vertices[x + (xDivisions + 2) * y] = new Vertex(
                         new Vector3(vx, 0, vy),
-                        new Vector3(0, 1, 0), new Vector2(vx, vy));
+                        new Vector3(0, 1, 0), new Vector2(vx + 0.5f, vy + 0.5f));
                 }
             }
             #endregion
@@ -191,15 +214,43 @@ namespace _3D_Renderer._Generation
             return plane;
         }
 
-        public static Mesh Text(int fontHandle, string text, out float lengthOfText)
+        public static Mesh Cube(int divisions)
+        {
+            Mesh bottom = Plane(divisions, divisions);
+            bottom.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, -0.5f, 0));
+            bottom.FlipFaces();
+            bottom.PermanentlyTransformNormals(Matrix4.CreateScale(1, -1, 1));
+            Mesh top = Plane(divisions, divisions);
+            top.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, 0.5f, 0));
+            Mesh combinedSideMesh = new Mesh();
+            Matrix4 sideTranslation = Matrix4.CreateTranslation(0, 0.5f, 0);
+            Matrix4 sideRotation = Matrix4.CreateFromQuaternion(
+                Quaternion.FromEulerAngles(MathF.PI / 2, 0, 0));
+            Matrix4 sideRotationOffset = Matrix4.CreateFromQuaternion(
+                Quaternion.FromEulerAngles(0, MathF.PI / 2, 0));
+            for(int i = 0; i < 4; i++)
+            {
+                Mesh side = Plane(divisions, divisions);
+                side.PermanentlyTransformVertices(sideTranslation * sideRotation);
+                side.PermanentlyTransformNormals(sideRotation);
+                sideRotation *= sideRotationOffset;
+                combinedSideMesh += side;
+            }
+
+            return bottom + top + combinedSideMesh;
+        }
+
+        public static Mesh[] Text(int fontHandle, string text, out float lengthOfText)
         {
             Font font = FontLoader.GetFont(fontHandle);
             char[] characters = text.ToCharArray();
-            Mesh textMesh = new Mesh();
+            Mesh[] textMesh = new Mesh[font.textureAtlasHandle.Length];
             float xCursor = 0;
             for (int i = 0; i < characters.Length; i++)
             {
                 FontCharacter characterInfo = font.GetCharacterInfo(characters[i]);
+                int meshIndex = characterInfo.page;
+
                 Mesh characterQuad = FontQuad(
                     (characterInfo.xOffset + xCursor) / (float)font.width, 
                     characterInfo.yOffset / (float)font.height,
@@ -207,16 +258,18 @@ namespace _3D_Renderer._Generation
                     characterInfo.x / (float)font.width,     characterInfo.y / (float)font.height);
                 xCursor += characterInfo.xAdvance;
 
-                if (i == 0)
+                if (textMesh[meshIndex] == null)
                 {
-                    textMesh = characterQuad;
+                    textMesh[meshIndex] = characterQuad;
                     continue;
                 }
-                textMesh += characterQuad;
+                textMesh[meshIndex] += characterQuad;
             }
             lengthOfText = xCursor / font.width;
-            textMesh -= new Vector3(lengthOfText / 2f, 0, 0);
-            textMesh.name = text;
+            for(int i = 0; i < textMesh.Length; i++) { 
+                textMesh[i] -= new Vector3(lengthOfText / 2f, 0, 0);
+                textMesh[i].name = text;
+            }
 
             return textMesh;
         }

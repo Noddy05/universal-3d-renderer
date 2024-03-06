@@ -17,9 +17,13 @@ namespace _3D_Renderer._Import
         /// <param name="fontAtlasPath"></param>
         /// <param name="fontMetaPath"></param>
         /// <returns>The font handle (only recognized by the <see cref="FontLoader"/>)</returns>
-        public static int LoadFont(string fontAtlasPath, string fontMetaPath)
+        public static int LoadFont(string fontMetaPath, params string[] fontAtlasPath)
         {
-            int textureAtlasHandle = TextureLoader.LoadTexture(fontAtlasPath);
+            int[] textureAtlases = new int[fontAtlasPath.Length];
+            for(int i = 0; i < textureAtlases.Length; i++)
+            {
+                textureAtlases[i] = TextureLoader.LoadTexture(fontAtlasPath[i]);
+            }
             string[] fontMeta = File.ReadAllLines(fontMetaPath);
             string name = SearchLines(fontMeta, "face=\"", "\"", out _)!;
             int size = int.Parse(SearchLines(fontMeta, "size=", " ", out _)!);
@@ -46,14 +50,15 @@ namespace _3D_Renderer._Import
                     int xOffset = int.Parse(ReadBetween(line, "xoffset=", " ", 0)!);
                     int yOffset = int.Parse(ReadBetween(line, "yoffset=", " ", 0)!);
                     int xAdvance = int.Parse(ReadBetween(line, "xadvance=", " ", 0)!);
+                    int page = int.Parse(ReadBetween(line, "page=", " ", 0)!);
 
                     FontCharacter fontChar = new FontCharacter(x, y,
-                        width, height, xOffset, yOffset, xAdvance);
+                        width, height, xOffset, yOffset, xAdvance, page);
                     characters.Add(charId, fontChar);
                 }
             }
 
-            Font font = new Font(name, textureAtlasHandle, bold, italic, size, 
+            Font font = new Font(name, textureAtlases, bold, italic, size, 
                 lineHeight, atlasWidth, atlasHeight);
             font.characters = characters;
             fonts.Add(font);

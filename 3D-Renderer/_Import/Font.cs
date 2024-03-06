@@ -10,7 +10,7 @@ namespace _3D_Renderer._Import
     internal class Font
     {
         public string name;
-        public int textureAtlasHandle;
+        public int[] textureAtlasHandle;
         public bool bold;
         public bool italic;
         public int size;
@@ -19,7 +19,7 @@ namespace _3D_Renderer._Import
         public int height;
         public Dictionary<int, FontCharacter> characters = new Dictionary<int, FontCharacter>();
 
-        public Font(string name, int textureAtlasHandle, bool bold, bool italic, int size, int lineHeight,
+        public Font(string name, int[] textureAtlasHandle, bool bold, bool italic, int size, int lineHeight,
             int width, int height)
         {
             this.name = name;

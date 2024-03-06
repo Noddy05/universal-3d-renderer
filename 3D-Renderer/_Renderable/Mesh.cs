@@ -185,8 +185,7 @@ namespace _3D_Renderer._Renderable
         }
 
         /// <summary>
-        /// Transforms vertices in the <see cref="VBO"/> only. 
-        /// This means that the vertices in the mesh is not affected by this change
+        /// Transforms vertices in the <see cref="VBO"/> and the mesh vertices. 
         /// </summary>
         /// <param name="transformation"></param>
         /// <returns>Transformed Vertices</returns>
@@ -195,6 +194,19 @@ namespace _3D_Renderer._Renderable
             for (int i = 0; i < vertices.Length; i++)
             {
                 vertices[i].vertexPosition = (new Vector4(vertices[i].vertexPosition, 1)
+                    * transformation).Xyz;
+            }
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float) * 8,
+                Vertex.VertexToFloatArray(vertices));
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        }
+        public void PermanentlyTransformNormals(Matrix4 transformation)
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i].vertexNormal = (new Vector4(vertices[i].vertexNormal, 1)
                     * transformation).Xyz;
             }
 
@@ -236,9 +248,19 @@ namespace _3D_Renderer._Renderable
 
             //Cache info:
             Vertex[] aVerts = a.vertices;
-            int[] aTris = a.ibo.GetIndices();
+            int[] aTris;
+            if (a.ibo != null)
+                aTris = a.ibo.GetIndices();
+            else 
+                aTris = [];
+
             Vertex[] bVerts = b.vertices;
-            int[] bTris = b.ibo.GetIndices();
+            int[] bTris;
+            if (b.ibo != null)
+                bTris = b.ibo.GetIndices();
+            else
+                bTris = [];
+
             Vertex[] newVertices = new Vertex[aVerts.Length + bVerts.Length];
             int[] newIndices = new int[aTris.Length + bTris.Length];
 

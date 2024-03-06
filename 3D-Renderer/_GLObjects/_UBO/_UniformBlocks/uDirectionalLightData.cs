@@ -41,11 +41,8 @@ namespace _3D_Renderer._GLObjects._UBO._UniformBlocks
                 data.AddRange(VBO.Color4ToColor3FloatArray(lightColor[i]));
                 data.Add(lightStrength[i]);
                 data.AddRange(VBO.ToFloatArray(lightCastFromDirection[i]));
-                data.Add(0); //dummy
+                data.Add(0); //dummy variable
             }
-            Console.WriteLine(lightColor[0]);
-            Console.WriteLine(lightStrength[0]);
-            Console.WriteLine(lightCastFromDirection[0]);
             dataToBind = data.ToArray();
         }
     }

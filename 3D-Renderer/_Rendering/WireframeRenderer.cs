@@ -102,7 +102,7 @@ namespace _3D_Renderer._Rendering
             GL.DrawElements(PrimitiveType.Lines, tris,
                 DrawElementsType.UnsignedInt, 0);
 
-            window!.renderStats.NewDrawCall(tris);
+            window!.renderStats.NewDrawCall(0);
         }
     }
 }

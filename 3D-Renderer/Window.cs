@@ -18,16 +18,10 @@ using _3D_Renderer._Renderable._Cubemap;
 using _3D_Renderer._Behaviour;
 using _3D_Renderer._GLObjects;
 using _3D_Renderer._GLObjects._UBO;
+using Font = _3D_Renderer._Import.Font;
 
 namespace _3D_Renderer
 {
-    /* 
-     * To clean up:
-     * InstanceMethods are temporary classes, should be rewritten
-     * UBO should be rewritten to not lose generality
-     * Cleanup in how vao modifications are done 
-    */
-
     /// <summary>
     /// The window will contain all the visual information the user will receive
     /// </summary>
@@ -64,11 +58,13 @@ namespace _3D_Renderer
         private FBO sceneFBO;
         private int fboOutputTexture;
         private int cmuSerifHandle;
+        private int timesNewRomanHandle;
         private Collection background = new Collection();
         private Collection scene = new Collection();
         private Collection canvas = new Collection();
         private GameObject instanceable;
-        private Matrix4[] matrices;
+        private int brickTextureHandle = -1;
+        private int brickNormalHandle = -1;
 
         /// <summary>
         /// This is called whenever <see cref="Window"/>.Run() is called.<br></br>
@@ -102,29 +98,19 @@ namespace _3D_Renderer
             uiRenderer = new UIRenderer();
 
             cmuSerifHandle = FontLoader.LoadFont(
-                @"../../../_Assets/_Built-In/_Fonts/_CMU Serif/cmuserif.png",
-                @"../../../_Assets/_Built-In/_Fonts/_CMU Serif/cmuserif.fnt");
+                @"../../../_Assets/_Built-In/_Fonts/_CMU Serif/cmuserif.fnt",
+                @"../../../_Assets/_Built-In/_Fonts/_CMU Serif/cmuserif.png");
+            timesNewRomanHandle = FontLoader.LoadFont(
+                @"../../../_Assets/_Built-In/_Fonts/_CMU Serif/cmuserif.fnt",
+                @"../../../_Assets/_Built-In/_Fonts/_CMU Serif/cmuserif.png");
 
+            brickTextureHandle = TextureLoader.LoadTexture(
+                @"../../../_Assets/_Debug/_Brickwall/brickTexture.png");
+            brickNormalHandle = TextureLoader.LoadTexture(
+                @"../../../_Assets/_Debug/_Brickwall/brickNormals.png");
             //Populate scene and instantiate RenderStats:
             PopulateScene();
             renderStats = new RenderStats();
-
-            Random rand = new Random();
-            matrices = new Matrix4[1000];
-            for (int i = 0; i < matrices.Length; i++)
-            {
-                Transform instanceTransform = new Transform();
-
-                instanceTransform.scale = Vector3.One * (0.05f +
-                    MathF.Pow((float)rand.NextDouble(), 1.4f) * 1.95f);
-
-                float theta = (float)rand.NextDouble() * 2 * MathF.PI;
-                float height = (float)rand.NextDouble() * 2 - 1f;
-                instanceTransform.position = new Vector3(MathF.Cos(theta),
-                    height, MathF.Sin(theta)) * (25 + (float)rand.NextDouble() * 5);
-                instanceTransform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
-                matrices[i] = instanceTransform.TransformationMatrix();
-            }
 
             //Loading has finished, show application:
             IsVisible = true;
@@ -134,7 +120,7 @@ namespace _3D_Renderer
             UBO.shadowData.minLightStrength = 0.1f;
             UBO.directionalLightData.SetLightColor(0, Color4.White);
             UBO.directionalLightData.SetLightStrength(0, 1);
-            UBO.directionalLightData.SetLightCastFromDirection(0, new Vector3(0, 1, 0).Normalized());
+            UBO.directionalLightData.SetLightCastFromDirection(0, new Vector3(1, 1, 1).Normalized());
             UBO.UpdateUBO();
         }
 
@@ -178,10 +164,10 @@ namespace _3D_Renderer
             //Populating scene:
             int textureHandle = TextureLoader.LoadTexture(@"../../../_Assets/_Debug/color-test.png");
             Mesh suzanneMesh = MeshLoader.Load(@"../../../_Assets/_Debug/suzanne.obj");
-            Mesh secondMesh = MeshLoader.Load(@"../../../_Assets/_Debug/suzanne.obj");
+            Mesh secondMesh = MeshGeneration.Cube(16);
 
             GameObject gameObject = new GameObject();
-            Material material = new DiffuseMaterial(textureHandle, Color4.White, cubemapTextureHandle);
+            Material material = new DiffuseMaterial(Color4.White, textureHandle, 0, cubemapTextureHandle);
             gameObject.SetMaterial(material);
             gameObject.SetMesh(suzanneMesh);
             gameObject.name = "First GameObject!";
@@ -192,11 +178,12 @@ namespace _3D_Renderer
             temp.showBoundingBox = true;
             temp.transform.position = new Vector3(0, 0, -5f);
             gameObject.showBoundingBox = false;
-            scene.renderables.Add(temp);
+            //scene.renderables.Add(temp);
 
             temp2 = temp.Clone();
             temp2.showBoundingBox = true;
             temp2.transform.position = new Vector3(0, 0, 5f);
+            temp2.SetMesh(secondMesh);
             scene.renderables.Add(temp2);
 
 
@@ -223,11 +210,20 @@ namespace _3D_Renderer
                 instanceTransform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
                 matrices[i] = instanceTransform.TransformationMatrix();
             }
-            instanceable.GetMesh()!.CreateInstanceVBO(matrices);
             instanceable.cull = false;
-            scene.renderables.Add(instanceable);
+            //instanceable.GetMesh()!.CreateInstanceVBO(matrices);
+            //scene.renderables.Add(instanceable);
 
             #endregion
+
+            GameObject plane = new GameObject();
+            plane.SetMesh(MeshGeneration.Plane(16, 16));
+            Material planeMaterial = new DiffuseMaterial(Color.White, 
+                brickTextureHandle, brickNormalHandle);
+            plane.SetMaterial(planeMaterial);
+            plane.transform.scale = Vector3.One * 2f;
+            plane.cull = true;
+            scene.renderables.Add(plane);
 
             #region UI
             //UI:
@@ -243,12 +239,29 @@ namespace _3D_Renderer
 
             #region Text
             //Text
+            Font timesNewRomanFont = FontLoader.GetFont(timesNewRomanHandle);
+            Mesh[] meshes = MeshGeneration.Text(timesNewRomanHandle, "Hello Mister!Z",
+                out float textWidth);
+            Material[] materials = new Material[meshes.Length];
+            GameObject[] textObjects = new GameObject[meshes.Length];
+            for (int i = 0; i < meshes.Length; i++)
+            {
+                materials[i] = new UITextMaterial(Color4.White,
+                    timesNewRomanFont.textureAtlasHandle[i]);
+                textObjects[i] = new GameObject();
+                textObjects[i].SetMaterial(materials[i]);
+                textObjects[i].SetMesh(meshes[i]);
+            }
+
+            //canvas.renderables.Add(textObjects[0]);
+
             Material cmuFontMaterial = new UITextMaterial(Color4.White,
-                FontLoader.GetFont(cmuSerifHandle).textureAtlasHandle);
+                    FontLoader.GetFont(cmuSerifHandle).textureAtlasHandle[0]);
             UIElement textObject = new UIElement();
             textObject.SetMaterial(cmuFontMaterial);
-            textObject.SetMesh(MeshGeneration.Text(cmuSerifHandle, "Hello World!", out float textWidth));
-            textObject.transform.scale /= textWidth / 2;
+            textObject.SetMesh(MeshGeneration.Text(cmuSerifHandle, "Hello World!", 
+                out float textWidth2)[0]);
+            textObject.transform.scale /= textWidth2 / 2;
             //canvas.renderables.Add(textObject);
             #endregion
         }
@@ -268,8 +281,6 @@ namespace _3D_Renderer
         protected override void OnUnload()
         {
             //Cleanup:
-            //Dispose shaders, VAO, IBO
-
             //Dispose of all EasyUnload objects:
             EasyUnload[] freezeFrame = EasyUnload.GetInstancedObjects().ToArray();
             foreach (EasyUnload objectToUnload in freezeFrame)
@@ -285,8 +296,8 @@ namespace _3D_Renderer
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             timeSinceStartup += args.Time;
-            temp.transform.rotation.Y = (float)timeSinceStartup;
             temp.transform.rotation.X = (float)timeSinceStartup * 0.4f;
+            temp.transform.rotation.Y = (float)timeSinceStartup;
             temp.transform.rotation.Z = (float)timeSinceStartup * 3f;
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -322,7 +333,12 @@ namespace _3D_Renderer
                 instanceTransform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
                 matrices[i] = instanceTransform.TransformationMatrix();
             }
-            instanceable.GetMesh()!.UpdateInstancedTransformations(matrices);
+            //instanceable.GetMesh()!.UpdateInstancedTransformations(matrices);
+
+            UBO.directionalLightData.SetLightCastFromDirection(0,
+                new Vector3(MathF.Sin((float)timeSinceStartup), 1,
+                MathF.Cos((float)timeSinceStartup)).Normalized());
+            UBO.UpdateUBO();
 
             //Render UI canvas:
             GL.Disable(EnableCap.DepthTest);

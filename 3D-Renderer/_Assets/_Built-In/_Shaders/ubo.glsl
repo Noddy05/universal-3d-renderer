@@ -8,9 +8,9 @@ layout(std140, binding = 0) uniform uShadowInformation {
 
 //Allows for 16 directional lights
 struct DirectionalLight {
-	vec3 directionalLightColor;
-	float directionalLightStrength;
-	vec3 directionalLightDirection;
+	vec3 lightColor;
+	float lightStrength;
+	vec3 lightDirection;
 	float _DUMMY_;
 };
 layout(std140, binding = 1) uniform uDirectionalLight {
@@ -19,7 +19,7 @@ layout(std140, binding = 1) uniform uDirectionalLight {
 
 //Allows for 512 point lights
 layout(std140, binding = 2) uniform uPointLight {
-	vec3  pointLightPosition[512];
-	float pointLightStrength[512];
-	bool  pointLightIsActive[512];
+	vec3  lightPosition[512];
+	float lightStrength[512];
+	bool  lightIsActive[512];
 };
