@@ -129,13 +129,25 @@ namespace _3D_Renderer._Renderable
         public void FlipFaces()
         {
             int[] indices = ibo.GetIndices();
-            for(int i = 0; i < indices.Length; i += 3)
+            for (int i = 0; i < indices.Length; i += 3)
             {
-                int temp = indices[i];
-                indices[i] = indices[i + 1];
+                int temp = indices[i + 2];
+                indices[i + 2] = indices[i + 1];
                 indices[i + 1] = temp;
             }
             SetIndices(indices, BufferUsageHint.StaticDraw);
+        }
+        public void FlipUVs()
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                Vector2 texCoords = vertices[i].textureCoordinate;
+                vertices[i].textureCoordinate = new Vector2(1-texCoords.X, 1-texCoords.Y);
+            }
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float) * 8,
+                Vertex.VertexToFloatArray(vertices));
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         }
 
         public Mesh CopyAsWireframe()

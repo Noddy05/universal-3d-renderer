@@ -27,15 +27,15 @@ out DATA {
 struct DirectionalLight {
 	vec3 lightColor;
 	float lightStrength;
-	vec3 lightDirection;
+	vec3 lightFromDirection;
 	float _DUMMY_;
 };
-layout(std140, binding = 1) uniform _uDirectionalLight {
+layout(std140, binding = 1) uniform uvDirectionalLight {
 	DirectionalLight[16] directionalLights;
 } directional_light;
 
 void main() {
-    vec3 worldPosition = (cameraMatrix * transformationMatrix * vec4(position, 1)).xyz;
+    vec3 worldPosition = (transformationMatrix * vec4(position, 1)).xyz;
     gl_Position = vec4(worldPosition, 1);
 
     //gl_ClipDistance[0] = dot(worldPosition, clippingPlane.xyz) + clippingPlane.w;
@@ -45,7 +45,7 @@ void main() {
     data_out.vTexCoords = textureCoords;
 	data_out.projectionMatrix = projectionMatrix;
 	data_out.transformationMatrix = transformationMatrix;
-	data_out.lightCastFromDirection = directional_light.directionalLights[0].lightDirection;
+	data_out.lightCastFromDirection = directional_light.directionalLights[0].lightFromDirection;
 
 	data_out.vNormal = normal;
 }

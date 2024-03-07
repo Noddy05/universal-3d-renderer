@@ -1,11 +1,11 @@
 #version 420 core
 
 in vec3 vPosition;
-in vec3 lightCastFromDirection;
 in vec3 cameraPosition;
 
 in vec3 vNormal;
 in vec2 vTexCoords;
+in mat3 TBNMatrix;
 
 out vec4 fragmentColor;
 
@@ -30,13 +30,15 @@ layout(std140, binding = 0) uniform uShadowInformation {
 struct DirectionalLight {
 	vec3 lightColor;
 	float lightStrength;
-	vec3 lightDirection;
+	vec3 lightFromDirection;
 	float _DUMMY_;
 };
 layout(std140, binding = 1) uniform uDirectionalLight {
 	DirectionalLight[16] lights;
 } directional_light;
 
+
+vec3 normal;
 
 vec4 DirectLight(int index){
     DirectionalLight light = directional_light.lights[index];
@@ -46,17 +48,17 @@ vec4 DirectLight(int index){
     vec3 toCamera = cameraPosition - vPosition;
 
     vec4 lightColor = vec4(light.lightColor, 1);
-    vec3 lightDirection = light.lightDirection;
-    float lightStrength = max(dot(lightDirection, vNormal), 0) 
+    vec3 lightFromDirection = light.lightFromDirection;
+    float lightStrength = max(dot(lightFromDirection, normal), 0) 
         * light.lightStrength;
     float lightStrengthClamped = max(lightStrength, 0);
     
-    vec3 reflectedDirection = reflect(-normalize(toCamera), normalize(vNormal));
-    float specularBrightness = max(dot(lightCastFromDirection, reflectedDirection), 0);
+    vec3 reflectedlightFromDirection = reflect(-lightFromDirection, normal);
+    float specularBrightness = max(dot(reflectedlightFromDirection, -normalize(toCamera)), 0);
     float specularHighlight = pow(specularBrightness, specularHighlightDamper) * reflectivity;
-
+    
     return vec4(lightColor * lightStrengthClamped + 
-        lightColor * specularHighlight);
+        lightColor * specularHighlight * lightStrengthClamped);
 }
 
 
@@ -66,7 +68,7 @@ void main(){
     //mixing between normal and vertex normal:
     vec3 vertexNormal = normalize(vNormal);
     vec3 normalMap = normalize(texture(normalSampler, vTexCoords).xyz * 2.0 - 1.0);
-    vec3 normal = vertexNormal;
+    normal = TBNMatrix * normalMap;
 
     //light and shadow settings:
     vec4 shadowColor = vec4(shadow_info.shadowColor, 1);

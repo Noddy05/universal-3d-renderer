@@ -46,5 +46,12 @@ namespace _3D_Renderer._Camera
             Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
         public Matrix4 PositionMatrix() =>
             Matrix4.CreateTranslation(position);
+
+        public Vector3 Up() => (Vector4.UnitY * CameraMatrix().Inverted()).Xyz;
+        public Vector3 Down() => -Up();
+        public Vector3 Forward() => (Vector4.UnitZ * CameraMatrix().Inverted()).Xyz;
+        public Vector3 Backward() => -Forward();
+        public Vector3 Right() => -(Vector4.UnitX * CameraMatrix().Inverted()).Xyz;
+        public Vector3 Left() => -Right();
     }
 }

@@ -68,6 +68,7 @@ namespace _3D_Renderer._Camera
         public void OnMouseMove(MouseMoveEventArgs e)
         {
             rotation += new Vector3(e.DeltaY, e.DeltaX, 0) * cameraSensitivity;
+            rotation.X = MathF.Max(MathF.Min(rotation.X, MathF.PI / 2), -MathF.PI / 2);
         }
 
         public override void Update(FrameEventArgs args)

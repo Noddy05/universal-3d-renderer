@@ -164,10 +164,11 @@ namespace _3D_Renderer
             //Populating scene:
             int textureHandle = TextureLoader.LoadTexture(@"../../../_Assets/_Debug/color-test.png");
             Mesh suzanneMesh = MeshLoader.Load(@"../../../_Assets/_Debug/suzanne.obj");
-            Mesh secondMesh = MeshGeneration.Cube(16);
+            Mesh secondMesh = MeshGeneration.CubeSphere(12);
 
             GameObject gameObject = new GameObject();
-            Material material = new DiffuseMaterial(Color4.White, textureHandle, 0, cubemapTextureHandle);
+            Material material = new DiffuseMaterial(Color4.White, defaultTextureHandle, 
+                brickNormalHandle, cubemapTextureHandle);
             gameObject.SetMaterial(material);
             gameObject.SetMesh(suzanneMesh);
             gameObject.name = "First GameObject!";
@@ -217,7 +218,7 @@ namespace _3D_Renderer
             #endregion
 
             GameObject plane = new GameObject();
-            plane.SetMesh(MeshGeneration.Plane(16, 16));
+            plane.SetMesh(MeshGeneration.Plane(1, 1));
             Material planeMaterial = new DiffuseMaterial(Color.White, 
                 brickTextureHandle, brickNormalHandle);
             plane.SetMaterial(planeMaterial);
@@ -240,7 +241,7 @@ namespace _3D_Renderer
             #region Text
             //Text
             Font timesNewRomanFont = FontLoader.GetFont(timesNewRomanHandle);
-            Mesh[] meshes = MeshGeneration.Text(timesNewRomanHandle, "Hello Mister!Z",
+            Mesh[] meshes = MeshGeneration.Text(timesNewRomanHandle, "Hello Mister!",
                 out float textWidth);
             Material[] materials = new Material[meshes.Length];
             GameObject[] textObjects = new GameObject[meshes.Length];
@@ -336,14 +337,29 @@ namespace _3D_Renderer
             //instanceable.GetMesh()!.UpdateInstancedTransformations(matrices);
 
             UBO.directionalLightData.SetLightCastFromDirection(0,
-                new Vector3(MathF.Sin((float)timeSinceStartup), 1,
+                new Vector3(0, MathF.Sin((float)timeSinceStartup),
                 MathF.Cos((float)timeSinceStartup)).Normalized());
+            /*
+            UBO.directionalLightData.SetLightCastFromDirection(0,
+                new Vector3(0, 0, 1).Normalized()); */
             UBO.UpdateUBO();
+
 
             //Render UI canvas:
             GL.Disable(EnableCap.DepthTest);
             uiRenderer.RenderCollection(canvas, camera,
                 Matrix4.Identity, camera.CameraMatrix());
+
+            float distanceFromCamera = 15f;
+            WireframeRenderer.RenderRay(-camera.Position() - camera.Forward() * distanceFromCamera,
+                new Vector3(0, MathF.PI, 0), camera.GetProjectionMatrix(),
+                camera.CameraMatrix(), Color4.Red);
+            WireframeRenderer.RenderRay(-camera.Position() - camera.Forward() * distanceFromCamera,
+                new Vector3(0, -MathF.PI / 2, 0), camera.GetProjectionMatrix(),
+                camera.CameraMatrix(), Color4.Blue);
+            WireframeRenderer.RenderRay(-camera.Position() - camera.Forward() * distanceFromCamera,
+                new Vector3(0, 0, MathF.PI / 2), camera.GetProjectionMatrix(),
+                camera.CameraMatrix(), Color4.Lime);
 
             SwapBuffers();
 

@@ -8,6 +8,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace _3D_Renderer._Rendering
     internal static class WireframeRenderer
     {
         private static GameObject? wireframeBox;
+        private static GameObject? wireframeRay;
         private static GameObject? wireframeSphere;
         private static Window? window;
 
@@ -45,8 +47,34 @@ namespace _3D_Renderer._Rendering
             fullCircleMesh += circle;
             wireframeSphere.SetMesh(fullCircleMesh);
             wireframeSphere.SetMaterial(material);
+
+            wireframeRay = new GameObject();
+            Mesh rayMesh = new Mesh();
+            rayMesh.SetVertices([new Vertex(new Vector3(0, 0, 0)),
+                new Vertex(new Vector3(1, 0, 0))], BufferUsageHint.StaticDraw);
+            rayMesh.SetIndices([0, 1], BufferUsageHint.StaticDraw);
+            wireframeRay.SetMesh(rayMesh);
+            wireframeRay.SetMaterial(material);
         }
 
+        public static void RenderRay(Vector3 position, Vector3 eulerAngles, 
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+        {
+            RenderRay(position, eulerAngles, projectionMatrix, cameraMatrix, Color4.Blue);
+        }
+        public static void RenderRay(Vector3 position, Vector3 eulerAngles,
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
+        {
+            wireframeRay!.transform.rotation = eulerAngles;
+            RenderWireframeObject(wireframeRay, position, 
+                Vector3.One, projectionMatrix, cameraMatrix, color);
+        }
+
+        public static void RenderWireframeBox(Vector3 position, Vector3 size,
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+        {
+            RenderWireframeBox(position, size, projectionMatrix, cameraMatrix, Color4.Blue);
+        }
         /// <summary>
         /// Renders a wireframe box in a set position, with a set size.
         /// </summary>
@@ -56,15 +84,16 @@ namespace _3D_Renderer._Rendering
         /// <param name="cameraMatrix"></param>
         /// <exception cref="Exception"></exception>
         public static void RenderWireframeBox(Vector3 position, Vector3 size,
-            Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
         {
-            if (wireframeBox == null)
-                throw new Exception("WireframeRenderer's wireframeBox is null. Remember to" +
-                    "initilize renderer with WireframeRenderer.Initialize()");
-
-            RenderWireframeObject(wireframeBox, position, size, projectionMatrix, cameraMatrix);
+            RenderWireframeObject(wireframeBox, position, size, projectionMatrix, cameraMatrix, color);
         }
 
+        public static void RenderWireframeSphere(Vector3 position, Vector3 size,
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+        {
+            RenderWireframeSphere(position, size, projectionMatrix, cameraMatrix, Color4.Blue);
+        }
         /// <summary>
         /// Renders a wireframe sphere in a set position, with a set radius.
         /// </summary>
@@ -74,13 +103,9 @@ namespace _3D_Renderer._Rendering
         /// <param name="cameraMatrix"></param>
         /// <exception cref="Exception"></exception>
         public static void RenderWireframeSphere(Vector3 position, Vector3 size,
-            Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
         {
-            if (wireframeSphere == null)
-                throw new Exception("WireframeRenderer's wireframeSphere is null. Remember to" +
-                    "initilize renderer with WireframeRenderer.Initialize()");
-
-            RenderWireframeObject(wireframeSphere, position, size, projectionMatrix, cameraMatrix);
+            RenderWireframeObject(wireframeSphere, position, size, projectionMatrix, cameraMatrix, color);
         }
 
         /// <summary>
@@ -92,8 +117,9 @@ namespace _3D_Renderer._Rendering
         /// <param name="projectionMatrix"></param>
         /// <param name="cameraMatrix"></param>
         private static void RenderWireframeObject(GameObject renderable, Vector3 position, Vector3 size,
-            Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
         {
+            ((UnlitMaterial)renderable.GetMaterial()).color = color;
             renderable.transform.position = position;
             renderable.transform.scale = size;
 

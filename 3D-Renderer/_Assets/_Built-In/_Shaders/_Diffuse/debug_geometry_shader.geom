@@ -12,6 +12,7 @@ out vec3 cameraPosition;
 
 out vec2 vTexCoords;
 out vec3 vNormal;
+out mat3 TBNMatrix;
 
 in DATA {
 	vec2 vTexCoords;
@@ -43,19 +44,18 @@ void main(){
 	vec3 B = normalize(vec3(data_in[0].transformationMatrix * vec4(bitangent, 0)));
 	vec3 N = normalize(vec3(data_in[0].transformationMatrix * vec4(cross(edge1, edge0), 0)));
 	
-	mat3 TBNMatrix = mat3(T, B, N);
-	TBNMatrix = transpose(TBNMatrix);
-	TBNMatrix = mat3(1);
+	TBNMatrix = mat3(T, B, N);
 
 
 	//Do nothing:
 	for(int i = 0; i < 3; i++){
-		vec4 finalPosition = data_in[i].projectionMatrix * gl_in[i].gl_Position;
+		vec4 finalPosition = data_in[i].projectionMatrix * 
+			data_in[i].cameraMatrix * gl_in[i].gl_Position;
 		gl_Position = finalPosition;
 		vTexCoords = data_in[i].vTexCoords;
-		vPosition = TBNMatrix * gl_in[i].gl_Position.xyz;
-		lightCastFromDirection = TBNMatrix * data_in[i].lightCastFromDirection;
-		cameraPosition = TBNMatrix * data_in[i].cameraPosition;
+		vPosition = gl_in[i].gl_Position.xyz;
+		lightCastFromDirection = data_in[i].lightCastFromDirection;
+		cameraPosition = data_in[i].cameraPosition;
 		vNormal = data_in[i].vNormal;
 
 		//Done with this vertex: 

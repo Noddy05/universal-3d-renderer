@@ -217,8 +217,11 @@ namespace _3D_Renderer._Generation
         public static Mesh Cube(int divisions)
         {
             Mesh bottom = Plane(divisions, divisions);
-            bottom.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, -0.5f, 0));
+            /*bottom.PermanentlyTransformVertices(Matrix4.CreateFromQuaternion(
+                Quaternion.FromEulerAngles(MathF.PI, 0, 0)));*/
             bottom.FlipFaces();
+            bottom.FlipUVs();
+            bottom.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, -0.5f, 0));
             bottom.PermanentlyTransformNormals(Matrix4.CreateScale(1, -1, 1));
             Mesh top = Plane(divisions, divisions);
             top.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, 0.5f, 0));
@@ -238,6 +241,48 @@ namespace _3D_Renderer._Generation
             }
 
             return bottom + top + combinedSideMesh;
+        }
+
+        public static Mesh CubeSphere(int divisions, float sphericalNess = 1)
+        {
+            Mesh bottom = Plane(divisions, divisions);
+            /*bottom.PermanentlyTransformVertices(Matrix4.CreateFromQuaternion(
+                Quaternion.FromEulerAngles(MathF.PI, 0, 0)));*/
+            bottom.FlipFaces();
+            bottom.FlipUVs();
+            bottom.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, -0.5f, 0));
+            bottom.PermanentlyTransformNormals(Matrix4.CreateScale(1, -1, 1));
+            Mesh top = Plane(divisions, divisions);
+            top.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, 0.5f, 0));
+            Mesh combinedSideMesh = new Mesh();
+            Matrix4 sideTranslation = Matrix4.CreateTranslation(0, 0.5f, 0);
+            Matrix4 sideRotation = Matrix4.CreateFromQuaternion(
+                Quaternion.FromEulerAngles(MathF.PI / 2, 0, 0));
+            Matrix4 sideRotationOffset = Matrix4.CreateFromQuaternion(
+                Quaternion.FromEulerAngles(0, MathF.PI / 2, 0));
+            for (int i = 0; i < 4; i++)
+            {
+                Mesh side = Plane(divisions, divisions);
+                side.PermanentlyTransformVertices(sideTranslation * sideRotation);
+                side.PermanentlyTransformNormals(sideRotation);
+                sideRotation *= sideRotationOffset;
+                combinedSideMesh += side;
+            }
+            Mesh combinedMesh = bottom + top + combinedSideMesh;
+            Vertex[] combinedVertices = combinedMesh.GetVertices();
+            Vertex[] modifiedVertices = new Vertex[combinedVertices.Length];
+            for (int i = 0; i < combinedVertices.Length; i++)
+            {
+                Vector3 normalizedPosition = combinedVertices[i].vertexPosition.Normalized();
+                Vector3 finalizedPosition = Vector3.Lerp(combinedVertices[i].vertexPosition,
+                    normalizedPosition, sphericalNess);
+
+                modifiedVertices[i] = new Vertex(finalizedPosition,
+                    finalizedPosition, combinedVertices[i].textureCoordinate);
+            }
+            combinedMesh.SetVertices(modifiedVertices, BufferUsageHint.StaticDraw);
+
+            return combinedMesh;
         }
 
         public static Mesh[] Text(int fontHandle, string text, out float lengthOfText)

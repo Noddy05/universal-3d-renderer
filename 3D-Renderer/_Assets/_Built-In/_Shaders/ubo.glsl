@@ -10,7 +10,7 @@ layout(std140, binding = 0) uniform uShadowInformation {
 struct DirectionalLight {
 	vec3 lightColor;
 	float lightStrength;
-	vec3 lightDirection;
+	vec3 lightFromDirection;
 	float _DUMMY_;
 };
 layout(std140, binding = 1) uniform uDirectionalLight {
