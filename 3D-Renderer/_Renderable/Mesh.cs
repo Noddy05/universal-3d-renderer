@@ -214,12 +214,71 @@ namespace _3D_Renderer._Renderable
                 Vertex.VertexToFloatArray(vertices));
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         }
+        /// <summary>
+        /// Transforms vertices in the <see cref="VBO"/> only. 
+        /// This means that the vertices in the mesh is not affected by this change
+        /// </summary>
+        /// <param name="transformation"></param>
+        /// <returns>Transformed Vertices</returns>
+        public Vertex[] TransformNormals(Matrix4 transformation)
+        {
+            Vertex[] transformedVertices = new Vertex[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                transformedVertices[i] = vertices[i];
+                transformedVertices[i].vertexNormal = (new Vector4(vertices[i].vertexNormal, 1)
+                    * transformation).Xyz;
+            }
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, transformedVertices.Length * sizeof(float) * 8,
+                Vertex.VertexToFloatArray(transformedVertices));
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+
+            return transformedVertices;
+        }
         public void PermanentlyTransformNormals(Matrix4 transformation)
         {
             for (int i = 0; i < vertices.Length; i++)
             {
                 vertices[i].vertexNormal = (new Vector4(vertices[i].vertexNormal, 1)
                     * transformation).Xyz;
+            }
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float) * 8,
+                Vertex.VertexToFloatArray(vertices));
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        }
+        /// <summary>
+        /// Transforms vertices in the <see cref="VBO"/> only. 
+        /// This means that the vertices in the mesh is not affected by this change
+        /// </summary>
+        /// <param name="transformation"></param>
+        /// <returns>Transformed Vertices</returns>
+        public Vertex[] TransformUVs(Matrix4 transformation)
+        {
+            Vertex[] transformedVertices = new Vertex[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                transformedVertices[i] = vertices[i];
+                transformedVertices[i].textureCoordinate = (new Vector4(
+                    vertices[i].textureCoordinate.X, vertices[i].textureCoordinate.Y, 1, 1)
+                    * transformation).Xy;
+            }
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, transformedVertices.Length * sizeof(float) * 8,
+                Vertex.VertexToFloatArray(transformedVertices));
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+
+            return transformedVertices;
+        }
+        public void PermanentlyTransformUVs(Matrix4 transformation)
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i].textureCoordinate = (new Vector4(
+                    vertices[i].textureCoordinate.X, vertices[i].textureCoordinate.Y, 1, 1)
+                    * transformation).Xy;
             }
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);

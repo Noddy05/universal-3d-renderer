@@ -166,7 +166,7 @@ namespace _3D_Renderer
             //Populating scene:
             int textureHandle = TextureLoader.LoadTexture(
                 @"../../../_Assets/_Debug/_Textures/color-test.png");
-            Mesh suzanneMesh = MeshLoader.Load(@"../../../_Assets/_Debug/_Models/suzanne.obj");
+            Mesh suzanneMesh = MeshLoader.Load(@"../../../_Assets/_Debug/_Models/suzanne_normals.obj");
             Mesh secondMesh = MeshGeneration.CubeSphere(12);
 
             GameObject gameObject = new GameObject();
@@ -184,6 +184,18 @@ namespace _3D_Renderer
             gameObject.showBoundingBox = false;
             scene.renderables.Add(temp);
 
+            int colorTextureHandle = TextureLoader.LoadTexture(
+                @"../../../_Assets/_Debug/_Textures/colors.png");
+            Material colorMaterial = new DiffuseMaterial(Color4.White, colorTextureHandle);
+            Mesh thirdMesh = MeshGeneration.Quad();
+            GameObject quad = temp.Clone();
+            quad.SetMaterial(colorMaterial);
+            //quad.SetMesh(thirdMesh);
+            quad.showBoundingBox = true;
+            quad.transform.position = new Vector3(0, 5f, 0);
+            quad.showBoundingBox = false;
+            scene.renderables.Add(quad);
+
             temp2 = temp.Clone();
             temp2.showBoundingBox = true;
             temp2.transform.position = new Vector3(0, 0, 5f);
@@ -199,6 +211,7 @@ namespace _3D_Renderer
                 @"../../../_Assets/_Debug/_Models/candle.obj");
             candle.SetMaterial(candleMaterial);
             candle.SetMesh(candleMesh);
+            candleMesh.PermanentlyTransformUVs(Matrix4.CreateScale(new Vector3(1, -1, 1)));
             candle.cull = false;
             scene.renderables.Add(candle);
 
