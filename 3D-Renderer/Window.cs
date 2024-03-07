@@ -93,7 +93,8 @@ namespace _3D_Renderer
             camera = new FreeCamera(70 * MathF.PI / 180f, 0.1f, 1000f, 1 / 800f, 5f);
 
             //Loads default texture and renderers:
-            defaultTextureHandle = TextureLoader.LoadTexture(@"../../../_Assets/_Debug/WhitePixel.png");
+            defaultTextureHandle = TextureLoader.LoadTexture(@"../../../_Assets/"
+                + @"_Built-In/_Textures/_Default/WhitePixel.png");
             defaultRenderer = new DefaultRenderer();
             uiRenderer = new UIRenderer();
 
@@ -105,9 +106,9 @@ namespace _3D_Renderer
                 @"../../../_Assets/_Built-In/_Fonts/_CMU Serif/cmuserif.png");
 
             brickTextureHandle = TextureLoader.LoadTexture(
-                @"../../../_Assets/_Debug/_Brickwall/brickTexture.png");
+                @"../../../_Assets/_Debug/_Textures/_Brickwall/brickTexture.png");
             brickNormalHandle = TextureLoader.LoadTexture(
-                @"../../../_Assets/_Debug/_Brickwall/brickNormals.png");
+                @"../../../_Assets/_Debug/_Textures/_Brickwall/brickNormals.png");
             //Populate scene and instantiate RenderStats:
             PopulateScene();
             renderStats = new RenderStats();
@@ -135,6 +136,7 @@ namespace _3D_Renderer
 
         private GameObject temp;
         private GameObject temp2;
+        private GameObject candle;
         private int instanceCount = 5000;
         private void PopulateScene()
         {
@@ -162,8 +164,9 @@ namespace _3D_Renderer
 
             #region GameObjects
             //Populating scene:
-            int textureHandle = TextureLoader.LoadTexture(@"../../../_Assets/_Debug/color-test.png");
-            Mesh suzanneMesh = MeshLoader.Load(@"../../../_Assets/_Debug/suzanne.obj");
+            int textureHandle = TextureLoader.LoadTexture(
+                @"../../../_Assets/_Debug/_Textures/color-test.png");
+            Mesh suzanneMesh = MeshLoader.Load(@"../../../_Assets/_Debug/_Models/suzanne.obj");
             Mesh secondMesh = MeshGeneration.CubeSphere(12);
 
             GameObject gameObject = new GameObject();
@@ -179,7 +182,7 @@ namespace _3D_Renderer
             temp.showBoundingBox = true;
             temp.transform.position = new Vector3(0, 0, -5f);
             gameObject.showBoundingBox = false;
-            //scene.renderables.Add(temp);
+            scene.renderables.Add(temp);
 
             temp2 = temp.Clone();
             temp2.showBoundingBox = true;
@@ -187,6 +190,17 @@ namespace _3D_Renderer
             temp2.SetMesh(secondMesh);
             scene.renderables.Add(temp2);
 
+
+            int candleTextureHandle = TextureLoader.LoadTexture(
+                @"../../../_Assets/_Debug/_Textures/colors.png");
+            candle = new GameObject();
+            DiffuseMaterial candleMaterial = new(Color4.White, candleTextureHandle);
+            Mesh candleMesh = MeshLoader.Load(
+                @"../../../_Assets/_Debug/_Models/candle.obj");
+            candle.SetMaterial(candleMaterial);
+            candle.SetMesh(candleMesh);
+            candle.cull = false;
+            scene.renderables.Add(candle);
 
             instanceable = gameObject.Clone();
             instanceable.SetMesh(secondMesh);
@@ -297,9 +311,12 @@ namespace _3D_Renderer
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             timeSinceStartup += args.Time;
+            temp.transform.rotation.Y = (float)timeSinceStartup * 0.45f;
+            candle.transform.rotation.Y = (float)timeSinceStartup * 0.6f;
+            /*
             temp.transform.rotation.X = (float)timeSinceStartup * 0.4f;
-            temp.transform.rotation.Y = (float)timeSinceStartup;
             temp.transform.rotation.Z = (float)timeSinceStartup * 3f;
+            */
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             //Render everything:
@@ -337,11 +354,7 @@ namespace _3D_Renderer
             //instanceable.GetMesh()!.UpdateInstancedTransformations(matrices);
 
             UBO.directionalLightData.SetLightCastFromDirection(0,
-                new Vector3(0, MathF.Sin((float)timeSinceStartup),
-                MathF.Cos((float)timeSinceStartup)).Normalized());
-            /*
-            UBO.directionalLightData.SetLightCastFromDirection(0,
-                new Vector3(0, 0, 1).Normalized()); */
+                new Vector3(1, 1, 1).Normalized());
             UBO.UpdateUBO();
 
 

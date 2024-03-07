@@ -47,5 +47,8 @@ void main() {
 	data_out.transformationMatrix = transformationMatrix;
 	data_out.lightCastFromDirection = directional_light.directionalLights[0].lightFromDirection;
 
-	data_out.vNormal = normal;
+	mat3 normalMatrix = mat3(transformationMatrix);
+	normalMatrix = inverse(normalMatrix);
+	normalMatrix = transpose(normalMatrix);
+	data_out.vNormal = normalize(normalMatrix * normal).xyz;
 }

@@ -18,7 +18,7 @@ uniform float cubemapRefractivity = 0.5;
 uniform float reflectivity = 1;
 uniform float specularHighlightDamper = 15;
 uniform vec4 color;
-uniform float normalMapMultiplier;
+in float vNormalMapMultiplier;
 
 
 layout(std140, binding = 0) uniform uShadowInformation {
@@ -66,9 +66,8 @@ void main(){
     vec3 toCamera = cameraPosition - vPosition;
 
     //mixing between normal and vertex normal:
-    vec3 vertexNormal = normalize(vNormal);
-    vec3 normalMap = normalize(texture(normalSampler, vTexCoords).xyz * 2.0 - 1.0);
-    normal = TBNMatrix * normalMap;
+    vec3 normalMap = -TBNMatrix * normalize(texture(normalSampler, vTexCoords).xyz * 2.0 - 1.0);
+    normal = mix(vNormal, normalMap, vNormalMapMultiplier);
 
     //light and shadow settings:
     vec4 shadowColor = vec4(shadow_info.shadowColor, 1);
