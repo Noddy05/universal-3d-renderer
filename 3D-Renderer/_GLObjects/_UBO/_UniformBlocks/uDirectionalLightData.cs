@@ -15,22 +15,17 @@ namespace _3D_Renderer._GLObjects._UBO._UniformBlocks
     {
         private const int maxDirectionalLights = 16;
 
-
-        private Color4[] lightColor = new Color4[maxDirectionalLights];
-        public void SetLightColor(int index, Color4 lightColor) => 
-            this.lightColor[index] = lightColor;
-
-        private float[] lightStrength = new float[maxDirectionalLights];
-        public void SetLightStrength(int index, float strength) =>
-            lightStrength[index] = strength;
-
-        private Vector3[] lightCastFromDirection = new Vector3[maxDirectionalLights];
-        public void SetLightCastFromDirection(int index, Vector3 lightCastFromDirection) =>
-            this.lightCastFromDirection[index] = lightCastFromDirection;
+        private DirectionalLight[] directionalLights 
+            = new DirectionalLight[maxDirectionalLights];
+        public DirectionalLight GetDirectionalLight(int index)
+            => directionalLights[index];
 
         public uDirectionalLightData(int index) : base(index)
         {
-            
+            for(int i = 0; i < maxDirectionalLights; i++)
+            {
+                directionalLights[i] = new DirectionalLight();
+            }
         }
 
         protected override void UpdateData()
@@ -38,9 +33,9 @@ namespace _3D_Renderer._GLObjects._UBO._UniformBlocks
             List<float> data = new List<float>();
             for (int i = 0; i < maxDirectionalLights; i++)
             {
-                data.AddRange(VBO.Color4ToColor3FloatArray(lightColor[i]));
-                data.Add(lightStrength[i]);
-                data.AddRange(VBO.ToFloatArray(lightCastFromDirection[i]));
+                data.AddRange(VBO.Color4ToColor3FloatArray(directionalLights[i].GetLightColor()));
+                data.Add(directionalLights[i].GetLightStrength());
+                data.AddRange(VBO.ToFloatArray(directionalLights[i].GetLightCastFromDirection()));
                 data.Add(0); //dummy variable
             }
             dataToBind = data.ToArray();

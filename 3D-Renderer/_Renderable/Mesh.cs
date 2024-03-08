@@ -37,7 +37,7 @@ namespace _3D_Renderer._Renderable
         /// If you want more you must make a new <see cref="VBO"/>.
         /// </summary>
         /// <returns></returns>
-        public int MaxInstancesAllowed() => instances;
+        public int MaxInstancesAllowed() => maxInstances;
         public void SetInstanceCount(int count)
         {
             if (count < 1)

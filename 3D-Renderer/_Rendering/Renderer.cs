@@ -25,7 +25,7 @@ namespace _3D_Renderer._Rendering
         /// <param name="projectionMatrix"></param>
         /// <param name="cameraMatrix"></param>
         /// <exception cref="NotImplementedException"></exception>
-        public virtual void RenderCollection(Collection collection, Camera camera,
+        public virtual void RenderCollection(string collection, Camera camera,
             Matrix4 projectionMatrix, Matrix4 cameraMatrix)
         {
             throw new NotImplementedException();

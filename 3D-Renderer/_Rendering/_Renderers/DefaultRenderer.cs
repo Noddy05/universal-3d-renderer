@@ -10,6 +10,7 @@ using _3D_Renderer._Geometry;
 using System.Xml.Schema;
 using _3D_Renderer._Shading;
 using _3D_Renderer._Import;
+using _3D_Renderer._SceneHierarchy;
 
 namespace _3D_Renderer._Rendering._Renderers
 {
@@ -18,7 +19,7 @@ namespace _3D_Renderer._Rendering._Renderers
     /// </summary>
     internal class DefaultRenderer : Renderer
     {
-        public override void RenderCollection(Collection collection, Camera camera,
+        public override void RenderCollection(string collection, Camera camera,
             Matrix4 projectionMatrix, Matrix4 cameraMatrix)
         {
             Frustum frustum = null;
@@ -29,7 +30,7 @@ namespace _3D_Renderer._Rendering._Renderers
                 frustum.frustumRotationMatrix = cam.RotationMatrix();
             }
 
-            foreach (Renderable renderable in collection.renderables)
+            foreach (Renderable renderable in SceneHierarchy.GetCollection(collection))
             {
                 //If no mesh, this should be skipped
                 if (renderable.GetMesh() == null)

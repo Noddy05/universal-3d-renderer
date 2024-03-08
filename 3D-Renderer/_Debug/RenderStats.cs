@@ -1,11 +1,6 @@
 ﻿using OpenTK.Windowing.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace _3D_Renderer._Statistics
+namespace _3D_Renderer._Debug
 {
     internal class RenderStats
     {
@@ -35,11 +30,7 @@ namespace _3D_Renderer._Statistics
             this.tris += tris;
         }
 
-        /// <summary>
-        /// Updates every frame. Changes title to show frame statistics.
-        /// </summary>
-        /// <param name="args"></param>
-        private void FrameRendered(FrameEventArgs args)
+        private void RemoveOldEntries(FrameEventArgs args)
         {
             deltaTimesDated.Add(((float)window.timeSinceStartup, (float)args.Time));
             deltaTimes.Add((float)args.Time);
@@ -51,10 +42,13 @@ namespace _3D_Renderer._Statistics
             {
                 deltaTimes.RemoveAt(0);
             }
+        }
+        private (float, float, float) CalculateAvgMinMax()
+        {
             float average = 0;
             float peak = float.MinValue;
             float minimum = float.MaxValue;
-            for(int i = 0; i < deltaTimesDated.Count; i++)
+            for (int i = 0; i < deltaTimesDated.Count; i++)
             {
                 float fps = 1f / deltaTimesDated[i].time;
                 average += fps / deltaTimesDated.Count;
@@ -63,6 +57,18 @@ namespace _3D_Renderer._Statistics
                 if (fps < minimum)
                     minimum = fps;
             }
+
+            return (average, minimum, peak);
+        }
+
+        /// <summary>
+        /// Updates every frame. Changes title to show frame statistics.
+        /// </summary>
+        /// <param name="args"></param>
+        private void FrameRendered(FrameEventArgs args)
+        {
+            RemoveOldEntries(args);
+            (float average, float minimum, float peak) = CalculateAvgMinMax();
             float averageLastNFrames = 0;
             for (int i = 0; i < deltaTimes.Count; i++)
             {

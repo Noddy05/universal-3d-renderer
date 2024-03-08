@@ -4,6 +4,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using _3D_Renderer._Renderable._UIElement;
 using _3D_Renderer._Camera;
+using _3D_Renderer._SceneHierarchy;
 
 namespace _3D_Renderer._Rendering._Renderers
 {
@@ -12,10 +13,10 @@ namespace _3D_Renderer._Rendering._Renderers
     /// </summary>
     internal class UIRenderer : Renderer
     {
-        public override void RenderCollection(Collection collection, Camera camera, 
+        public override void RenderCollection(string collection, Camera camera, 
             Matrix4 projectionMatrix, Matrix4 cameraMatrix)
         {
-            foreach(Renderable renderable in collection.renderables)
+            foreach(Renderable renderable in SceneHierarchy.GetCollection(collection))
             {
                 int tris = renderable.ApplyRenderable(projectionMatrix, cameraMatrix);
 

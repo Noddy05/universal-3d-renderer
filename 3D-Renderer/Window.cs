@@ -11,7 +11,7 @@ using _3D_Renderer._Rendering;
 using _3D_Renderer._Rendering._Renderers;
 using _3D_Renderer._Renderable._GameObject;
 using _3D_Renderer._Shading._Materials;
-using _3D_Renderer._Statistics;
+using _3D_Renderer._Debug;
 using _3D_Renderer._Renderable._UIElement;
 using _3D_Renderer._Generation;
 using _3D_Renderer._Renderable._Cubemap;
@@ -19,6 +19,7 @@ using _3D_Renderer._Behaviour;
 using _3D_Renderer._GLObjects;
 using _3D_Renderer._GLObjects._UBO;
 using Font = _3D_Renderer._Import.Font;
+using _3D_Renderer._SceneHierarchy;
 
 namespace _3D_Renderer
 {
@@ -59,9 +60,6 @@ namespace _3D_Renderer
         private int fboOutputTexture;
         private int cmuSerifHandle;
         private int timesNewRomanHandle;
-        private Collection background = new Collection();
-        private Collection scene = new Collection();
-        private Collection canvas = new Collection();
         private GameObject instanceable;
         private int brickTextureHandle = -1;
         private int brickNormalHandle = -1;
@@ -109,9 +107,15 @@ namespace _3D_Renderer
                 @"../../../_Assets/_Debug/_Textures/_Brickwall/brickTexture.png");
             brickNormalHandle = TextureLoader.LoadTexture(
                 @"../../../_Assets/_Debug/_Textures/_Brickwall/brickNormals.png");
+
+            //Add collections:
+            SceneHierarchy.NewCollection("Background");
+            SceneHierarchy.NewCollection("Canvas");
+
             //Populate scene and instantiate RenderStats:
             PopulateScene();
             renderStats = new RenderStats();
+
 
             //Loading has finished, show application:
             IsVisible = true;
@@ -119,9 +123,10 @@ namespace _3D_Renderer
 
             UBO.shadowData.shadowColor = new Color4(19, 22, 46, 255);
             UBO.shadowData.minLightStrength = 0.1f;
-            UBO.directionalLightData.SetLightColor(0, Color4.White);
-            UBO.directionalLightData.SetLightStrength(0, 1);
-            UBO.directionalLightData.SetLightCastFromDirection(0, new Vector3(1, 1, 1).Normalized());
+            UBO.directionalLightData.GetDirectionalLight(0).SetLightColor(Color4.White);
+            UBO.directionalLightData.GetDirectionalLight(0).SetLightStrength(1);
+            UBO.directionalLightData.GetDirectionalLight(0)
+                .SetLightCastFromDirection(new Vector3(1, 1, 1).Normalized());
             UBO.UpdateUBO();
         }
 
@@ -159,7 +164,7 @@ namespace _3D_Renderer
             Material skybox = new CubemapMaterial(cubemapTextureHandle);
             cubemap.SetMaterial(skybox);
             cubemap.cull = false;
-            background.renderables.Add(cubemap);
+            SceneHierarchy.AddRenderable("Background", cubemap);
             #endregion
 
             #region GameObjects
@@ -183,7 +188,7 @@ namespace _3D_Renderer
             temp.showBoundingBox = true;
             temp.transform.position = new Vector3(0, 0, -5f);
             gameObject.showBoundingBox = false;
-            scene.renderables.Add(temp);
+            SceneHierarchy.AddRenderable("Scene", temp);
 
             int colorTextureHandle = TextureLoader.LoadTexture(
                 @"../../../_Assets/_Debug/_Textures/colors.png");
@@ -195,13 +200,13 @@ namespace _3D_Renderer
             quad.showBoundingBox = true;
             quad.transform.position = new Vector3(0, 5f, 0);
             quad.showBoundingBox = false;
-            scene.renderables.Add(quad);
+            SceneHierarchy.AddRenderable("Scene", quad);
 
             temp2 = temp.Clone();
             temp2.showBoundingBox = true;
             temp2.transform.position = new Vector3(0, 0, 5f);
             temp2.SetMesh(secondMesh);
-            scene.renderables.Add(temp2);
+            SceneHierarchy.AddRenderable("Scene", temp2);
 
 
             int candleTextureHandle = TextureLoader.LoadTexture(
@@ -214,7 +219,7 @@ namespace _3D_Renderer
             candle.SetMesh(candleMesh);
             candleMesh.PermanentlyTransformUVs(Matrix4.CreateScale(new Vector3(1, -1, 1)));
             candle.cull = true;
-            scene.renderables.Add(candle);
+            SceneHierarchy.AddRenderable("Scene", candle);
 
             instanceable = gameObject.Clone();
             instanceable.SetMesh(secondMesh);
@@ -252,7 +257,7 @@ namespace _3D_Renderer
             plane.SetMaterial(planeMaterial);
             plane.transform.scale = Vector3.One * 2f;
             plane.cull = true;
-            scene.renderables.Add(plane);
+            SceneHierarchy.AddRenderable("Scene", plane);
 
             #region UI
             //UI:
@@ -337,14 +342,14 @@ namespace _3D_Renderer
 
             //Background (skybox):
             GL.Disable(EnableCap.DepthTest);
-            defaultRenderer.RenderCollection(background, camera,
+            defaultRenderer.RenderCollection("Background", camera,
                 camera.GetProjectionMatrix(), camera.RotationMatrix());
 
             GL.Enable(EnableCap.DepthTest);
             //sceneFBO.BindFramebuffer();
             //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            defaultRenderer.RenderCollection(scene, camera,
+            defaultRenderer.RenderCollection("Scene", camera,
                 camera.GetProjectionMatrix(), camera.CameraMatrix());
             //sceneFBO.UnbindFramebuffer();
 
@@ -367,14 +372,14 @@ namespace _3D_Renderer
             }
             //instanceable.GetMesh()!.UpdateInstancedTransformations(matrices);
 
-            UBO.directionalLightData.SetLightCastFromDirection(0,
-                new Vector3(1, 1, 1).Normalized());
+            UBO.directionalLightData.GetDirectionalLight(0).SetLightCastFromDirection
+                (new Vector3(1, 1, 1).Normalized());
             UBO.UpdateUBO();
 
 
             //Render UI canvas:
             GL.Disable(EnableCap.DepthTest);
-            uiRenderer.RenderCollection(canvas, camera,
+            uiRenderer.RenderCollection("Canvas", camera,
                 Matrix4.Identity, camera.CameraMatrix());
 
             float distanceFromCamera = 15f;
