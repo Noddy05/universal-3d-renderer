@@ -170,10 +170,11 @@ namespace _3D_Renderer
             Mesh secondMesh = MeshGeneration.CubeSphere(12);
 
             GameObject gameObject = new GameObject();
-            Material material = new DiffuseMaterial(Color4.White, defaultTextureHandle, 
+            DiffuseMaterial material = new DiffuseMaterial(Color4.White, defaultTextureHandle, 
                 brickNormalHandle, cubemapTextureHandle);
             gameObject.SetMaterial(material);
             gameObject.SetMesh(suzanneMesh);
+            material.useNormalMap = true;
             gameObject.name = "First GameObject!";
             gameObject.transform.position = new Vector3(0, 0, -5f);
             gameObject.transform.scale = Vector3.One;
@@ -212,7 +213,7 @@ namespace _3D_Renderer
             candle.SetMaterial(candleMaterial);
             candle.SetMesh(candleMesh);
             candleMesh.PermanentlyTransformUVs(Matrix4.CreateScale(new Vector3(1, -1, 1)));
-            candle.cull = false;
+            candle.cull = true;
             scene.renderables.Add(candle);
 
             instanceable = gameObject.Clone();

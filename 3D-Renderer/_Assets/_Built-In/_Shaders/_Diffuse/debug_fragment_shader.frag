@@ -5,7 +5,7 @@ in vec3 cameraPosition;
 
 in vec3 vNormal;
 in vec2 vTexCoords;
-in mat3 TBNMatrix;
+in vec3 lightDirections[16];
 
 out vec4 fragmentColor;
 
@@ -18,7 +18,7 @@ uniform float cubemapRefractivity = 0.5;
 uniform float reflectivity = 1;
 uniform float specularHighlightDamper = 15;
 uniform vec4 color;
-in float vNormalMapMultiplier;
+in float vUseNormalMap;
 
 
 layout(std140, binding = 0) uniform uShadowInformation {
@@ -48,7 +48,7 @@ vec4 DirectLight(int index){
     vec3 toCamera = cameraPosition - vPosition;
 
     vec4 lightColor = vec4(light.lightColor, 1);
-    vec3 lightFromDirection = light.lightFromDirection;
+    vec3 lightFromDirection = lightDirections[index];
     float lightStrength = max(dot(lightFromDirection, normal), 0) 
         * light.lightStrength;
     float lightStrengthClamped = max(lightStrength, 0);
@@ -66,8 +66,8 @@ void main(){
     vec3 toCamera = cameraPosition - vPosition;
 
     //mixing between normal and vertex normal:
-    vec3 normalMap = -TBNMatrix * normalize(texture(normalSampler, vTexCoords).xyz * 2.0 - 1.0);
-    normal = mix(vNormal, normalMap, vNormalMapMultiplier);
+    vec3 normalMap = normalize(texture(normalSampler, vTexCoords).xyz * 2.0 - 1.0);
+    normal = mix(vNormal, normalMap, vUseNormalMap);
 
     //light and shadow settings:
     vec4 shadowColor = vec4(shadow_info.shadowColor, 1);

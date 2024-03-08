@@ -16,7 +16,6 @@ out DATA {
 	mat4 transformationMatrix;
 	mat4 cameraMatrix;
 
-	vec3 lightCastFromDirection;
 	vec3 cameraPosition;
 
 	vec3 vNormal;
@@ -30,9 +29,6 @@ struct DirectionalLight {
 	vec3 lightFromDirection;
 	float _DUMMY_;
 };
-layout(std140, binding = 1) uniform uvDirectionalLight {
-	DirectionalLight[16] directionalLights;
-} directional_light;
 
 void main() {
     vec3 worldPosition = (transformationMatrix * vec4(position, 1)).xyz;
@@ -45,7 +41,6 @@ void main() {
     data_out.vTexCoords = textureCoords;
 	data_out.projectionMatrix = projectionMatrix;
 	data_out.transformationMatrix = transformationMatrix;
-	data_out.lightCastFromDirection = directional_light.directionalLights[0].lightFromDirection;
 
 	mat3 normalMatrix = mat3(transformationMatrix);
 	normalMatrix = inverse(normalMatrix);

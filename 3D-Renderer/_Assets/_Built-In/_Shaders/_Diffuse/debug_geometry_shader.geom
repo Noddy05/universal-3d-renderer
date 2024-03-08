@@ -7,13 +7,22 @@ layout (triangle_strip, max_vertices = 3) out;
 
 
 out vec3 vPosition;
-out vec3 lightCastFromDirection;
 out vec3 cameraPosition;
 
 out vec2 vTexCoords;
 out vec3 vNormal;
-out mat3 TBNMatrix;
-out float vNormalMapMultiplier;
+out float vUseNormalMap;
+
+struct DirectionalLight {
+	vec3 lightColor;
+	float lightStrength;
+	vec3 lightFromDirection;
+	float _DUMMY_;
+};
+out vec3 lightDirections[16];
+layout(std140, binding = 1) uniform gDirectionalLight {
+	DirectionalLight[16] directionalLights;
+} directional_light;
 
 in DATA {
 	vec2 vTexCoords;
@@ -21,19 +30,17 @@ in DATA {
 	mat4 transformationMatrix;
 	mat4 cameraMatrix;
 
-	vec3 lightCastFromDirection;
 	vec3 cameraPosition;
 
 	vec3 vNormal;
 } data_in[];
 
-uniform float normalMapMultiplier = 0.0;
+uniform float useNormalMap;
 
 void main(){
-	TBNMatrix = mat3(1);
 	mat3 normalMatrix = mat3(data_in[0].transformationMatrix);
 	normalMatrix = transpose(normalMatrix);
-	if(normalMapMultiplier >= 0.05){
+	if(useNormalMap >= 0.5){
 		//TBN calculation https://youtu.be/JNj1A1bl7gg?si=Gj05jp66z7PEQT1f&t=225
 		vec3 edge0 = gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz;
 		vec3 edge1 = gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz;
@@ -48,22 +55,29 @@ void main(){
 		vec3 B = normalize(vec3(data_in[0].transformationMatrix * vec4(bitangent, 0)));
 		vec3 N = normalize(vec3(data_in[0].transformationMatrix * vec4(cross(edge1, edge0), 0)));
 	
-		TBNMatrix = normalMatrix * mat3(T, B, N);
+		mat3 TBNMatrix = normalMatrix * mat3(T, B, N);
+		TBNMatrix = transpose(TBNMatrix);
+		for(int i = 0; i < 16; i++){
+			lightDirections[i] = -TBNMatrix * directional_light.directionalLights[i].lightFromDirection;
+		}
+	} 
+	else 
+	{
+		for(int i = 0; i < 16; i++){
+			lightDirections[i] = directional_light.directionalLights[i].lightFromDirection;
+		}
 	}
 
-
 	//Do nothing:
+	vUseNormalMap = useNormalMap;
 	for(int i = 0; i < 3; i++){
-
 		vec4 finalPosition = data_in[i].projectionMatrix * 
 			data_in[i].cameraMatrix * gl_in[i].gl_Position;
 		gl_Position = finalPosition;
 		vTexCoords = data_in[i].vTexCoords;
 		vPosition = gl_in[i].gl_Position.xyz;
-		lightCastFromDirection = data_in[i].lightCastFromDirection;
 		cameraPosition = data_in[i].cameraPosition;
 		vNormal = data_in[i].vNormal;
-		vNormalMapMultiplier = normalMapMultiplier;
 
 		//Done with this vertex: 
 		EmitVertex();

@@ -11,7 +11,7 @@ namespace _3D_Renderer._Shading._Materials
         public int textureHandle = -1;
         public int normalMapHandle = -1;
         public int reflectionMapHandle = -1;
-        public float normalMapMultiplier = 0f;
+        public bool useNormalMap = false;
 
         public float cubemapReflectivity = 0f;
         public float cubemapRefractivity = 0f;
@@ -28,7 +28,7 @@ namespace _3D_Renderer._Shading._Materials
         private int UL_cubemapReflectivity     = -1;
         private int UL_cubemapRefractivity     = -1;
         private int UL_reflectivity            = -1;
-        private int UL_normalMapMultiplier     = -1;
+        private int UL_useNormalMap            = -1;
         private int UL_specularHighlightDamper = -1;
 
         //Might delete:
@@ -48,7 +48,7 @@ namespace _3D_Renderer._Shading._Materials
         {
             clippingPlane = new Plane(Vector3.Zero, Vector3.Zero);
 
-            normalMapMultiplier = 0f;
+            useNormalMap = false;
             this.color = color;
             textureHandle = Program.GetWindow().GetDefaultTextureHandle();
 
@@ -61,7 +61,7 @@ namespace _3D_Renderer._Shading._Materials
             UL_cubemapRefractivity = GL.GetUniformLocation(shader, "cubemapRefractivity");
             UL_reflectivity = GL.GetUniformLocation(shader, "reflectivity");
             UL_specularHighlightDamper = GL.GetUniformLocation(shader, "specularHighlightDamper");
-            UL_normalMapMultiplier = GL.GetUniformLocation(shader, "normalMapMultiplier");
+            UL_useNormalMap = GL.GetUniformLocation(shader, "useNormalMap");
         }
         public DiffuseMaterial(Color4 color, int textureHandle)
             : this(color)
@@ -73,7 +73,7 @@ namespace _3D_Renderer._Shading._Materials
             : this(color, textureHandle)
         {
             this.normalMapHandle = normalMapHandle;
-            normalMapMultiplier = 1f;
+            useNormalMap = true;
         }
         public DiffuseMaterial(Color4 color, int textureHandle, 
             int normalMapHandle, int reflectionCubemapTexture)
@@ -115,7 +115,7 @@ namespace _3D_Renderer._Shading._Materials
             GL.Uniform1(UL_cubemapRefractivity, cubemapRefractivity);
             GL.Uniform1(UL_reflectivity, reflectivity);
             GL.Uniform1(UL_specularHighlightDamper, specularHighlightDamper);
-            GL.Uniform1(UL_normalMapMultiplier, normalMapMultiplier);
+            GL.Uniform1(UL_useNormalMap, useNormalMap ? 1f : 0f);
 
             clippingPlane.ApplyAsClippingPlane(UL_clippingPlane);
         }
