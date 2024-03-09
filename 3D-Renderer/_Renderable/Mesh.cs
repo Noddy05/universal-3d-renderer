@@ -1,4 +1,5 @@
-﻿using _3D_Renderer._GLObjects;
+﻿using _3D_Renderer._Debug;
+using _3D_Renderer._GLObjects;
 using _3D_Renderer._Renderable._GameObject;
 using _3D_Renderer._Renderable._UIElement;
 using OpenTK.Graphics.OpenGL;
@@ -9,13 +10,14 @@ using System.Collections.Generic;
 using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Sources;
 
 namespace _3D_Renderer._Renderable
 {
-    internal class Mesh
+    internal class Mesh : IDisposable
     {
         public string name;
 
@@ -115,12 +117,14 @@ namespace _3D_Renderer._Renderable
         {
             if (instanceVBO == null)
             {
-                throw new Exception("This mesh is has no instanceVBO!");
+                Debug.LogError("This mesh is has no instanceVBO!");
+                return;
             }
-            if (transformations.Length > instances)
+            if (transformations.Length > maxInstances)
             {
-                throw new Exception("Too many transformations matrices for VBO!"
-                    + $"Only {instances} transformations allowed.");
+                Debug.LogError("Too many transformations matrices for VBO!"
+                    + $"Only {maxInstances} transformations allowed.");
+                return;
             }
             instanceVBO.SetBufferSubData(transformations, 0);
         }
@@ -290,28 +294,15 @@ namespace _3D_Renderer._Renderable
         #region Operators
         public static Mesh operator +(Mesh a, Vector3 offset)
         {
-            Mesh merged = new Mesh();
-            merged.name = a.name;
-
-            //Cache info:
-            Vertex[] aVerts = a.vertices;
-            int[] aTris = a.ibo.GetIndices();
-            Vertex[] newVertices = new Vertex[aVerts.Length];
-
-            for (int i = 0; i < aVerts.Length; i++)
-            {
-                newVertices[i] = aVerts[i];
-                newVertices[i].vertexPosition += offset;
-            }
-            merged.SetVertices(newVertices, BufferUsageHint.StaticDraw);
-            merged.SetIndices(aTris, BufferUsageHint.StaticDraw);
-
-            return merged;
+            a.PermanentlyTransformVertices(Matrix4.CreateTranslation(offset));
+            return a;
         }
         public static Mesh operator -(Mesh a, Vector3 offset)
         {
-            return a + -offset;
+            a.PermanentlyTransformVertices(Matrix4.CreateTranslation(-offset));
+            return a;
         }
+
         public static Mesh operator +(Mesh a, Mesh b)
         {
             Mesh merged = new Mesh();
@@ -353,6 +344,9 @@ namespace _3D_Renderer._Renderable
             }
             merged.SetVertices(newVertices, BufferUsageHint.StaticDraw);
             merged.SetIndices(newIndices, BufferUsageHint.StaticDraw);
+
+            a.Dispose();
+            b.Dispose();
 
             return merged;
         }
@@ -460,5 +454,27 @@ namespace _3D_Renderer._Renderable
         }
 
         #endregion
+
+
+        private bool disposed = false;
+        /// <summary>
+        /// Disposes the <see cref="Mesh"/> object.<br/>
+        /// </summary>
+        public void Dispose()
+        {
+            if (disposed)
+                return;
+
+            if (vbo != null)
+                vbo.Dispose();
+            if (vao != null)
+                vao.Dispose();
+            if (ibo != null)
+                ibo.Dispose();
+            if (instanceVBO != null)
+                instanceVBO.Dispose();
+
+            disposed = true;
+        }
     }
 }

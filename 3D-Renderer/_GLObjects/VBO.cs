@@ -3,6 +3,7 @@ using _3D_Renderer._Renderable;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System.Collections.Generic;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace _3D_Renderer._GLObjects
 {

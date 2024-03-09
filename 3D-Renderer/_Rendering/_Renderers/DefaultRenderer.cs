@@ -73,6 +73,57 @@ namespace _3D_Renderer._Rendering._Renderers
                 window.renderStats.NewDrawCall(tris * instanceCount);
             }
         }
+        public override void RenderObject(Renderable renderable, Camera camera,
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+        {
+            Frustum frustum = null;
+            if (camera.GetType() == typeof(FreeCamera))
+            {
+                FreeCamera cam = (FreeCamera)camera;
+                frustum = cam.CameraFrustum();
+                frustum.frustumRotationMatrix = cam.RotationMatrix();
+            }
+
+            //If no mesh, this should be skipped
+            if (renderable.GetMesh() == null)
+                return;
+
+            //Draw debug sphere around renderable
+            if (renderable.cull && frustum != null)
+            {
+                float longestScale = MathF.Max(MathF.Max(renderable.transform.scale.X,
+                    renderable.transform.scale.Y), renderable.transform.scale.Z);
+                if (!frustum.Intersects(renderable.transform.position + camera.Position(),
+                    renderable.GetMesh()!.GetBoundingRadius() * longestScale))
+                {
+                    //Cull this object => skip this one
+                    return;
+                }
+            }
+
+            //Draw bounding box for renderable:
+            DrawHitboxes(renderable, projectionMatrix, cameraMatrix);
+
+            int tris = renderable.ApplyRenderable(projectionMatrix, cameraMatrix);
+            if (tris <= 0) //If mesh is null skip this renderable.
+                return;
+
+            int instanceCount = renderable.GetMesh()!.InstanceCount();
+            if (instanceCount > 1)
+            {
+                //Draw instanced:
+                GL.DrawElementsInstanced(PrimitiveType.Triangles, tris,
+                    DrawElementsType.UnsignedInt, 0, instanceCount);
+            }
+            else
+            {
+                //Draw regular:
+                GL.DrawElements(PrimitiveType.Triangles, tris,
+                    DrawElementsType.UnsignedInt, 0);
+            }
+
+            window.renderStats.NewDrawCall(tris * instanceCount);
+        }
 
         /// <summary>
         /// Calls the <see cref="WireframeRenderer"/> for drawing hitboxes.

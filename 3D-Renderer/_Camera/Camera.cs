@@ -1,5 +1,6 @@
 ﻿using _3D_Renderer._Behaviour;
 using _3D_Renderer._Geometry;
+using _3D_Renderer._Saves;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
@@ -23,8 +24,10 @@ namespace _3D_Renderer._Camera
         /// </summary>
         public virtual void GenerateProjectionMatrix() => new NotImplementedException();
 
+        [SaveOnClose]
         protected Vector3 position;
         public Vector3 Position() => position;
+        [SaveOnClose]
         protected Vector3 rotation;
         public Vector3 Rotation() => rotation;
 

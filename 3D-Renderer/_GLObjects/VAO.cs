@@ -1,7 +1,9 @@
 ﻿using _3D_Renderer._Behaviour;
+using _3D_Renderer._Debug;
 using _3D_Renderer._Renderable;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using System.Runtime.CompilerServices;
 
 namespace _3D_Renderer._GLObjects
 {
@@ -69,24 +71,6 @@ namespace _3D_Renderer._GLObjects
                 GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             }
         }
-
-        /*
-        public void ModifyPointer(int index, int size,
-            int stride, int offset)
-        {
-            //Bind VAO and VBO
-            GL.BindVertexArray(handle);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo!);
-
-            //Modify pointer:
-            GL.VertexAttribPointer(index, size, VertexAttribPointerType.Float, false,
-                stride * sizeof(float), offset * sizeof(float));
-
-            //Unbind VAO and VBO
-            GL.BindVertexArray(0);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-        }
-        */
 
         /// <summary>
         /// </summary>

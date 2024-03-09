@@ -19,7 +19,7 @@ namespace _3D_Renderer._Shading._Materials
         public float specularHighlightDamper = 15;
         public Color4 color;
 
-        //Uniforms:
+        //Uniforms locations:
         private int UL_color                   = -1;
         private int UL_clippingPlane           = -1;
         private int UL_textureSampler          = -1;
@@ -40,8 +40,10 @@ namespace _3D_Renderer._Shading._Materials
         /// <param name="textureHandle"></param>
         /// <param name="color"></param>
         /// <param name="reflectionCubemapTexture"></param>
-        public DiffuseMaterial(Color4 color)
-            : base(new Shader(@"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_vertex_shader.vert",
+        public DiffuseMaterial(Color4 color, bool instanced = false)
+            : base(new Shader(instanced ? 
+                @"../../../_Assets/_Built-In/_Shaders/_Diffuse/instanced.vert"
+                : @"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_vertex_shader.vert",
                 @"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_fragment_shader.frag", 
                 (@"../../../_Assets/_Built-In/_Shaders/_Diffuse/debug_geometry_shader.geom", 
                 ShaderType.GeometryShader)))
@@ -63,21 +65,22 @@ namespace _3D_Renderer._Shading._Materials
             UL_specularHighlightDamper = GL.GetUniformLocation(shader, "specularHighlightDamper");
             UL_useNormalMap = GL.GetUniformLocation(shader, "useNormalMap");
         }
-        public DiffuseMaterial(Color4 color, int textureHandle)
-            : this(color)
+        public DiffuseMaterial(Color4 color, int textureHandle, bool instanced = false)
+            : this(color, instanced)
         {
             this.textureHandle = textureHandle;
         }
 
-        public DiffuseMaterial(Color4 color, int textureHandle, int normalMapHandle)
-            : this(color, textureHandle)
+        public DiffuseMaterial(Color4 color, int textureHandle, int normalMapHandle, 
+            bool instanced = false)
+            : this(color, textureHandle, instanced)
         {
             this.normalMapHandle = normalMapHandle;
             useNormalMap = true;
         }
         public DiffuseMaterial(Color4 color, int textureHandle, 
-            int normalMapHandle, int reflectionCubemapTexture)
-            : this(color, textureHandle, normalMapHandle)
+            int normalMapHandle, int reflectionCubemapTexture, bool instanced = false)
+            : this(color, textureHandle, normalMapHandle, instanced)
         {
             reflectionMapHandle = reflectionCubemapTexture;
             cubemapReflectivity = 0.5f;

@@ -20,6 +20,8 @@ using _3D_Renderer._GLObjects;
 using _3D_Renderer._GLObjects._UBO;
 using Font = _3D_Renderer._Import.Font;
 using _3D_Renderer._SceneHierarchy;
+using _3D_Renderer._Saves;
+using System.Reflection;
 
 namespace _3D_Renderer
 {
@@ -48,7 +50,8 @@ namespace _3D_Renderer
         public RenderStats renderStats;
         private int defaultTextureHandle = -1;
         public int GetDefaultTextureHandle() => defaultTextureHandle;
-        private Camera camera;
+        private FreeCamera editorCamera;
+        public FreeCamera GetEditorCamera() => editorCamera;
         private Material defaultMaterial;
         public Material GetDefaultMaterial() => defaultMaterial;
         //Renderers
@@ -63,6 +66,11 @@ namespace _3D_Renderer
         private GameObject instanceable;
         private int brickTextureHandle = -1;
         private int brickNormalHandle = -1;
+        private OutlineMaterial outlineMaterial;
+        private GameObject temp;
+        private GameObject temp2;
+        private GameObject candle;
+        private int instanceCount = 500;
 
         /// <summary>
         /// This is called whenever <see cref="Window"/>.Run() is called.<br></br>
@@ -78,17 +86,23 @@ namespace _3D_Renderer
         {
             base.OnLoad();
 
+            EditorMemory.LoadLatestSave();
+
             //Clear color and backface culling:
             GL.ClearColor(Color.PeachPuff);
             GL.CullFace(CullFaceMode.Back);
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.ClipDistance0);
             GL.Enable(EnableCap.Multisample);
+            GL.Enable(EnableCap.StencilTest);
+            GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
+
+            EditorMemory.SetLatestSaveLocation(@"../../../_Saves/_LatestSave");
 
             defaultMaterial = new UnlitMaterial(Color.Purple);
 
             //Create perspectivematrix, camera and locks mouse:
-            camera = new FreeCamera(70 * MathF.PI / 180f, 0.1f, 1000f, 1 / 800f, 5f);
+            editorCamera = new FreeCamera(70 * MathF.PI / 180f, 0.1f, 1000f, 1 / 800f, 5f);
 
             //Loads default texture and renderers:
             defaultTextureHandle = TextureLoader.LoadTexture(@"../../../_Assets/"
@@ -128,7 +142,11 @@ namespace _3D_Renderer
             UBO.directionalLightData.GetDirectionalLight(0)
                 .SetLightCastFromDirection(new Vector3(1, 1, 1).Normalized());
             UBO.UpdateUBO();
+
+            EditorMemory.AttachObject("EditorCamera", editorCamera);
+            EditorMemory.AttachObject("WindowState", this);
         }
+
 
         /// <summary>
         /// This fills the <see cref="Collection"/> "scene" with randomly positioned and scaled 
@@ -138,13 +156,10 @@ namespace _3D_Renderer
         /// Finally it adds a textured UI-element to the top-right corner which will be added to the
         /// "canvas" <see cref="Collection"/>.
         /// </summary>
-
-        private GameObject temp;
-        private GameObject temp2;
-        private GameObject candle;
-        private int instanceCount = 5000;
         private void PopulateScene()
         {
+            outlineMaterial = new OutlineMaterial(Color4.Red);
+
             sceneFBO = new FBO(new Vector2i((int)(Size.X * 0.3f), (int)(Size.Y * 0.3f)));
             sceneFBO.CreateTextureAttachment();
             sceneFBO.CreateDepthTextureAttachment();
@@ -212,23 +227,13 @@ namespace _3D_Renderer
             int candleTextureHandle = TextureLoader.LoadTexture(
                 @"../../../_Assets/_Debug/_Textures/colors.png");
             candle = new GameObject();
-            DiffuseMaterial candleMaterial = new(Color4.White, candleTextureHandle);
+            DiffuseMaterial candleMaterial = new(Color4.White, candleTextureHandle, true);
             Mesh candleMesh = MeshLoader.Load(
                 @"../../../_Assets/_Debug/_Models/candle.obj");
             candle.SetMaterial(candleMaterial);
             candle.SetMesh(candleMesh);
             candleMesh.PermanentlyTransformUVs(Matrix4.CreateScale(new Vector3(1, -1, 1)));
-            candle.cull = true;
-            SceneHierarchy.AddRenderable("Scene", candle);
-
-            instanceable = gameObject.Clone();
-            instanceable.SetMesh(secondMesh);
-            instanceable.transform.position = Vector3.Zero;
-            instanceable.transform.rotation = Vector3.Zero;
-            instanceable.transform.scale = Vector3.One;
-            Material particleMaterial = new ParticleMaterial(Color4.White);
-            instanceable.SetMaterial(particleMaterial);
-
+            candle.cull = false;
             Random rand = new Random(1);
             Matrix4[] matrices = new Matrix4[instanceCount];
             for(int i = 0; i < instanceCount; i++)
@@ -244,9 +249,17 @@ namespace _3D_Renderer
                 instanceTransform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
                 matrices[i] = instanceTransform.TransformationMatrix();
             }
-            instanceable.cull = false;
-            //instanceable.GetMesh()!.CreateInstanceVBO(matrices);
-            //scene.renderables.Add(instanceable);
+            candle.GetMesh()!.CreateInstanceVBO(matrices);
+            SceneHierarchy.AddRenderable("Scene", candle);
+
+            instanceable = gameObject.Clone();
+            instanceable.SetMesh(secondMesh);
+            instanceable.transform.position = Vector3.Zero;
+            instanceable.transform.rotation = Vector3.Zero;
+            instanceable.transform.scale = Vector3.One;
+            Material particleMaterial = new ParticleMaterial(Color4.White);
+            instanceable.SetMaterial(particleMaterial);
+
 
             #endregion
 
@@ -298,13 +311,14 @@ namespace _3D_Renderer
             textObject.transform.scale /= textWidth2 / 2;
             //canvas.renderables.Add(textObject);
             #endregion
+
         }
 
 
         protected override void OnResize(ResizeEventArgs e)
         {
             GL.Viewport(0, 0, e.Width, e.Height);
-            camera.GenerateProjectionMatrix();
+            editorCamera.GenerateProjectionMatrix();
             base.OnResize(e);
         }
 
@@ -314,6 +328,7 @@ namespace _3D_Renderer
         /// </summary>
         protected override void OnUnload()
         {
+
             //Cleanup:
             //Dispose of all EasyUnload objects:
             EasyUnload[] freezeFrame = EasyUnload.GetInstancedObjects().ToArray();
@@ -326,37 +341,37 @@ namespace _3D_Renderer
             base.OnUnload();
         }
 
+        [SaveOnClose]
         public double timeSinceStartup = 0;
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             timeSinceStartup += args.Time;
             temp.transform.rotation.Y = (float)timeSinceStartup * 0.45f;
             candle.transform.rotation.Y = (float)timeSinceStartup * 0.6f;
-            /*
-            temp.transform.rotation.X = (float)timeSinceStartup * 0.4f;
-            temp.transform.rotation.Z = (float)timeSinceStartup * 3f;
-            */
 
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit
+                | ClearBufferMask.StencilBufferBit);
             //Render everything:
 
             //Background (skybox):
             GL.Disable(EnableCap.DepthTest);
-            defaultRenderer.RenderCollection("Background", camera,
-                camera.GetProjectionMatrix(), camera.RotationMatrix());
+            defaultRenderer.RenderCollection("Background", editorCamera,
+                editorCamera.GetProjectionMatrix(), editorCamera.RotationMatrix());
 
             GL.Enable(EnableCap.DepthTest);
             //sceneFBO.BindFramebuffer();
             //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            defaultRenderer.RenderCollection("Scene", camera,
-                camera.GetProjectionMatrix(), camera.CameraMatrix());
+            defaultRenderer.RenderCollection("Scene", editorCamera,
+                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix());
+
+
             //sceneFBO.UnbindFramebuffer();
 
             //Instanced:
             Random rand = new Random(1);
             Matrix4[] matrices = new Matrix4[instanceCount];
-            for (int i = 0; i < instanceCount; i++)
+            for (int i = 0; i < candle.GetMesh()!.InstanceCount(); i++)
             {
                 Transform instanceTransform = new Transform();
                 instanceTransform.scale = Vector3.One * (0.05f +
@@ -364,13 +379,14 @@ namespace _3D_Renderer
 
                 float theta = (float)rand.NextDouble() * 2 * MathF.PI;
                 float height = (float)rand.NextDouble() * 2 - 1f;
-                instanceTransform.position = new Vector3(MathF.Cos(theta),
-                    height, MathF.Sin(theta)) * (25 + (float)rand.NextDouble() * 5 
-                    + 5f * MathF.Sin((float)timeSinceStartup));
+                instanceTransform.position = new Vector3(MathF.Cos(theta) 
+                    * (1.2f + 0.2f * MathF.Sin((float)timeSinceStartup)),
+                    height, MathF.Sin(theta) * (1.2f + 0.2f * MathF.Sin((float)timeSinceStartup))) 
+                    * (25 + (float)rand.NextDouble() * 5);
                 instanceTransform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
                 matrices[i] = instanceTransform.TransformationMatrix();
             }
-            //instanceable.GetMesh()!.UpdateInstancedTransformations(matrices);
+            candle.GetMesh()!.UpdateInstancedTransformations(matrices);
 
             UBO.directionalLightData.GetDirectionalLight(0).SetLightCastFromDirection
                 (new Vector3(1, 1, 1).Normalized());
@@ -379,19 +395,21 @@ namespace _3D_Renderer
 
             //Render UI canvas:
             GL.Disable(EnableCap.DepthTest);
-            uiRenderer.RenderCollection("Canvas", camera,
-                Matrix4.Identity, camera.CameraMatrix());
+            uiRenderer.RenderCollection("Canvas", editorCamera,
+                Matrix4.Identity, editorCamera.CameraMatrix());
 
             float distanceFromCamera = 15f;
-            WireframeRenderer.RenderRay(-camera.Position() - camera.Forward() * distanceFromCamera,
-                new Vector3(0, MathF.PI, 0), camera.GetProjectionMatrix(),
-                camera.CameraMatrix(), Color4.Red);
-            WireframeRenderer.RenderRay(-camera.Position() - camera.Forward() * distanceFromCamera,
-                new Vector3(0, -MathF.PI / 2, 0), camera.GetProjectionMatrix(),
-                camera.CameraMatrix(), Color4.Blue);
-            WireframeRenderer.RenderRay(-camera.Position() - camera.Forward() * distanceFromCamera,
-                new Vector3(0, 0, MathF.PI / 2), camera.GetProjectionMatrix(),
-                camera.CameraMatrix(), Color4.Lime);
+            WireframeRenderer.RenderRay(-editorCamera.Position() - editorCamera.Forward() 
+                * distanceFromCamera, new Vector3(0, MathF.PI, 0), 
+                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Red);
+
+            WireframeRenderer.RenderRay(-editorCamera.Position() - editorCamera.Forward() 
+                * distanceFromCamera, new Vector3(0, -MathF.PI / 2, 0), 
+                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Blue);
+
+            WireframeRenderer.RenderRay(-editorCamera.Position() - editorCamera.Forward() 
+                * distanceFromCamera, new Vector3(0, 0, MathF.PI / 2), 
+                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Lime);
 
             SwapBuffers();
 
