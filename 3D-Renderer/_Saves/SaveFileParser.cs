@@ -1,13 +1,6 @@
 ﻿using _3D_Renderer._Debug;
-using OpenTK.Graphics.ES20;
 using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace _3D_Renderer._Saves
 {
@@ -19,6 +12,11 @@ namespace _3D_Renderer._Saves
             if (type == typeof(string))
             {
                 return (string)obj;
+            }
+            if (type == typeof(Vector4))
+            {
+                Vector4 v = (Vector4)obj;
+                return $"{v.X};{v.Y};{v.Z};{v.W}";
             }
             if (type == typeof(Vector3))
             {
@@ -55,11 +53,21 @@ namespace _3D_Renderer._Saves
         public static object ParseFromString(FieldInfo fieldInfo, string data)
         {
             //I swear switch statements dont work for this :crying emoji:
-            string[] parts = data.Split(';');
             Type type = fieldInfo.FieldType;
             if (type == typeof(string))
             {
                 return data;
+            }
+
+            string[] parts = data.Split(';');
+            if (type == typeof(Vector4))
+            {
+                Vector4 parsed = new Vector4();
+                parsed.X = float.Parse(parts[0]);
+                parsed.Y = float.Parse(parts[1]);
+                parsed.Z = float.Parse(parts[2]);
+                parsed.W = float.Parse(parts[3]);
+                return parsed;
             }
             if (type == typeof(Vector3))
             {

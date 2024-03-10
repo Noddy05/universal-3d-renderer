@@ -51,6 +51,11 @@ namespace _3D_Renderer._Renderable
         {
             throw new NotImplementedException();
         }
+        public virtual int ApplyRenderable(Matrix4 transformation, 
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+        {
+            throw new NotImplementedException();
+        }
 
         public void CalculateBoundingBox(bool recalculateOnlyIfRotationChanged)
         {

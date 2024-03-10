@@ -208,10 +208,10 @@ namespace _3D_Renderer
             int colorTextureHandle = TextureLoader.LoadTexture(
                 @"../../../_Assets/_Debug/_Textures/colors.png");
             Material colorMaterial = new DiffuseMaterial(Color4.White, colorTextureHandle);
-            Mesh thirdMesh = MeshGeneration.Quad();
+            Mesh thirdMesh = MeshGeneration.Circle(15);
             GameObject quad = temp.Clone();
             quad.SetMaterial(colorMaterial);
-            //quad.SetMesh(thirdMesh);
+            quad.SetMesh(thirdMesh);
             quad.showBoundingBox = true;
             quad.transform.position = new Vector3(0, 5f, 0);
             quad.showBoundingBox = false;
@@ -399,17 +399,30 @@ namespace _3D_Renderer
                 Matrix4.Identity, editorCamera.CameraMatrix());
 
             float distanceFromCamera = 15f;
-            WireframeRenderer.RenderRay(-editorCamera.Position() - editorCamera.Forward() 
-                * distanceFromCamera, new Vector3(0, MathF.PI, 0), 
+            Vector3 cursorOrigin = -editorCamera.Position() - editorCamera.Forward() * distanceFromCamera;
+            WireframeRenderer.RenderDirection(cursorOrigin, new Vector3(1, 0, 0), 
                 editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Red);
 
-            WireframeRenderer.RenderRay(-editorCamera.Position() - editorCamera.Forward() 
-                * distanceFromCamera, new Vector3(0, -MathF.PI / 2, 0), 
+            WireframeRenderer.RenderDirection(cursorOrigin, new Vector3(0, 1, 0), 
+                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Lime);
+
+            WireframeRenderer.RenderDirection(cursorOrigin, new Vector3(0, 0, 1), 
                 editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Blue);
 
-            WireframeRenderer.RenderRay(-editorCamera.Position() - editorCamera.Forward() 
-                * distanceFromCamera, new Vector3(0, 0, MathF.PI / 2), 
+            Matrix4 transformationMatrix = new Matrix4(new Vector4(0, 1, 0, 0),
+                new Vector4(0, 0, 1, 0), new Vector4(1, 0, 0, 0), new Vector4(0, 0, 0, 1));
+            Vector3 transformedUnitX = (transformationMatrix * new Vector4(1, 0, 0, 0)).Xyz;
+            Vector3 transformedUnitY = (transformationMatrix * new Vector4(0, 1, 0, 0)).Xyz;
+            Vector3 transformedUnitZ = (transformationMatrix * new Vector4(0, 0, 1, 0)).Xyz;
+
+            WireframeRenderer.RenderDirection(cursorOrigin + 2 * Vector3.UnitY, transformedUnitX,
+                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Red);
+
+            WireframeRenderer.RenderDirection(cursorOrigin + 2 * Vector3.UnitY, transformedUnitY,
                 editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Lime);
+
+            WireframeRenderer.RenderDirection(cursorOrigin + 2 * Vector3.UnitY, transformedUnitZ,
+                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Blue);
 
             SwapBuffers();
 

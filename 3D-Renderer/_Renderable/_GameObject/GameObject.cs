@@ -36,22 +36,27 @@ namespace _3D_Renderer._Renderable._GameObject
         //For rendering: (returns number of indices)
         public override int ApplyRenderable(Matrix4 projectionMatrix, Matrix4 cameraMatrix)
         {
-            if(mesh == null)
+            Matrix4 transformationMatrix = transform.TransformationMatrix();
+            return ApplyRenderable(transformationMatrix, projectionMatrix, cameraMatrix);
+        }
+        public override int ApplyRenderable(Matrix4 transformationMatrix, 
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix)
+        {
+            if (mesh == null)
             {
                 return 0;
             }
 
             //Bind material, mesh and transformation matrix
-            if(material == null)
+            if (material == null)
             {
                 Program.GetWindow().GetDefaultMaterial().ApplyMaterial();
-            } 
+            }
             else
             {
                 material.ApplyMaterial();
             }
             mesh.Bind();
-            Matrix4 transformationMatrix = transform.TransformationMatrix();
             GL.UniformMatrix4(UL_transformationMatrix, false, ref transformationMatrix);
 
             //Bind camera and projection matrix

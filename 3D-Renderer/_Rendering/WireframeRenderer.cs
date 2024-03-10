@@ -55,6 +55,7 @@ namespace _3D_Renderer._Rendering
             rayMesh.SetIndices([0, 1], BufferUsageHint.StaticDraw);
             wireframeRay.SetMesh(rayMesh);
             wireframeRay.SetMaterial(material);
+
         }
 
         public static void RenderRay(Vector3 position, Vector3 eulerAngles, 
@@ -66,8 +67,30 @@ namespace _3D_Renderer._Rendering
             Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
         {
             wireframeRay!.transform.rotation = eulerAngles;
-            RenderWireframeObject(wireframeRay, position, 
+            RenderWireframeObject(wireframeRay, position,
                 Vector3.One, projectionMatrix, cameraMatrix, color);
+        }
+        public static void RenderRay(Matrix4 transformationMatrix,
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
+        {
+            RenderWireframeObject(wireframeRay, transformationMatrix,
+                projectionMatrix, cameraMatrix, color);
+        }
+        public static void RenderLine(Vector3 from, Vector3 to,
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
+        {
+            Mesh rayMesh = wireframeRay!.GetMesh()!;
+            rayMesh.UpdateVBO([new Vertex(), new Vertex(to - from)]);
+            RenderWireframeObject(wireframeRay, from, Vector3.One,
+                projectionMatrix, cameraMatrix, color);
+        }
+        public static void RenderDirection(Vector3 from, Vector3 direction,
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
+        {
+            Mesh rayMesh = wireframeRay!.GetMesh()!;
+            rayMesh.UpdateVBO([new Vertex(), new Vertex(direction)]);
+            RenderWireframeObject(wireframeRay, from, Vector3.One,
+                projectionMatrix, cameraMatrix, color);
         }
 
         public static void RenderWireframeBox(Vector3 position, Vector3 size,
@@ -124,6 +147,17 @@ namespace _3D_Renderer._Rendering
             renderable.transform.scale = size;
 
             int tris = renderable.ApplyRenderable(projectionMatrix, cameraMatrix);
+
+            GL.DrawElements(PrimitiveType.Lines, tris,
+                DrawElementsType.UnsignedInt, 0);
+
+            window!.renderStats.NewDrawCall(0);
+        }
+        private static void RenderWireframeObject(GameObject renderable, Matrix4 transformMatrix, 
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
+        {
+            ((UnlitMaterial)renderable.GetMaterial()).color = color;
+            int tris = renderable.ApplyRenderable(transformMatrix, projectionMatrix, cameraMatrix);
 
             GL.DrawElements(PrimitiveType.Lines, tris,
                 DrawElementsType.UnsignedInt, 0);

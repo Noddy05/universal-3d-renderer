@@ -217,12 +217,8 @@ namespace _3D_Renderer._Generation
         public static Mesh Cube(int divisions)
         {
             Mesh bottom = Plane(divisions, divisions);
-            /*bottom.PermanentlyTransformVertices(Matrix4.CreateFromQuaternion(
-                Quaternion.FromEulerAngles(MathF.PI, 0, 0)));*/
-            bottom.FlipFaces();
-            bottom.FlipUVs();
+            bottom.FlipFacesUVsNormals();
             bottom.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, -0.5f, 0));
-            bottom.PermanentlyTransformNormals(Matrix4.CreateScale(1, -1, 1));
             Mesh top = Plane(divisions, divisions);
             top.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, 0.5f, 0));
             Mesh combinedSideMesh = new Mesh();

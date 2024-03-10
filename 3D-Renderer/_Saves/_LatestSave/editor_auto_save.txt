@@ -1,4 +1,4 @@
-# Editor auto save at 10-03-2024 00:45:09
-"EditorCamera" FreeCamera position -54,922127;-36,56429;-32,437622
-"EditorCamera" FreeCamera rotation 0,56749016;-1,0374873;0
-"WindowState" Window timeSinceStartup 30,893001299999867
+# Editor auto save at 10-03-2024 18:13:57
+"EditorCamera" FreeCamera position -1,1535932;-2,6325116;-4,46582
+"EditorCamera" FreeCamera rotation 0,47753066;-0,7425666;0
+"WindowState" Window timeSinceStartup 229,4397408999994

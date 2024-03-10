@@ -130,6 +130,12 @@ namespace _3D_Renderer._Renderable
         }
 
         #region Modification
+        public void FlipFacesUVsNormals()
+        {
+            FlipFaces();
+            FlipUVs();
+            PermanentlyTransformNormals(Matrix4.CreateScale(1, -1, 1));
+        }
         public void FlipFaces()
         {
             int[] indices = ibo.GetIndices();
@@ -192,10 +198,8 @@ namespace _3D_Renderer._Renderable
                 transformedVertices[i].vertexPosition = (new Vector4(vertices[i].vertexPosition, 1)
                     * transformation).Xyz;
             }
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, transformedVertices.Length * sizeof(float) * 8,
-                Vertex.VertexToFloatArray(transformedVertices));
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+
+            UpdateVBO(transformedVertices);
 
             return transformedVertices;
         }
@@ -213,10 +217,7 @@ namespace _3D_Renderer._Renderable
                     * transformation).Xyz;
             }
 
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float) * 8,
-                Vertex.VertexToFloatArray(vertices));
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            UpdateVBO(vertices);
         }
         /// <summary>
         /// Transforms vertices in the <see cref="VBO"/> only. 
@@ -233,10 +234,7 @@ namespace _3D_Renderer._Renderable
                 transformedVertices[i].vertexNormal = (new Vector4(vertices[i].vertexNormal, 1)
                     * transformation).Xyz;
             }
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, transformedVertices.Length * sizeof(float) * 8,
-                Vertex.VertexToFloatArray(transformedVertices));
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            UpdateVBO(transformedVertices);
 
             return transformedVertices;
         }
@@ -248,6 +246,11 @@ namespace _3D_Renderer._Renderable
                     * transformation).Xyz;
             }
 
+            UpdateVBO(vertices);
+        }
+
+        public void UpdateVBO(Vertex[] vertices)
+        {
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float) * 8,
                 Vertex.VertexToFloatArray(vertices));
