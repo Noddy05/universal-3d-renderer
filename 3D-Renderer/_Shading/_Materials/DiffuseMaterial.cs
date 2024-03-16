@@ -11,6 +11,7 @@ namespace _3D_Renderer._Shading._Materials
         public int textureHandle = -1;
         public int normalMapHandle = -1;
         public int reflectionMapHandle = -1;
+        public int shadowMapHandle = -1;
         public bool useNormalMap = false;
 
         public float cubemapReflectivity = 0f;
@@ -22,14 +23,15 @@ namespace _3D_Renderer._Shading._Materials
         //Uniforms locations:
         private int UL_color                   = -1;
         private int UL_clippingPlane           = -1;
-        private int UL_textureSampler          = -1;
-        private int UL_reflectionSampler       = -1;
-        private int UL_normalSampler           = -1;
         private int UL_cubemapReflectivity     = -1;
         private int UL_cubemapRefractivity     = -1;
         private int UL_reflectivity            = -1;
         private int UL_useNormalMap            = -1;
         private int UL_specularHighlightDamper = -1;
+        private int UL_textureSampler          = -1;
+        private int UL_reflectionSampler       = -1;
+        private int UL_normalSampler           = -1;
+        private int UL_shadowSampler        = -1;
 
         //Might delete:
         private Plane clippingPlane;
@@ -56,14 +58,15 @@ namespace _3D_Renderer._Shading._Materials
 
             UL_color = GL.GetUniformLocation(shader, "color");
             UL_clippingPlane = GL.GetUniformLocation(shader, "clippingPlane");
-            UL_textureSampler = GL.GetUniformLocation(shader, "textureSampler");
-            UL_reflectionSampler = GL.GetUniformLocation(shader, "reflectionSampler");
-            UL_normalSampler = GL.GetUniformLocation(shader, "normalSampler");
             UL_cubemapReflectivity = GL.GetUniformLocation(shader, "cubemapReflectivity");
             UL_cubemapRefractivity = GL.GetUniformLocation(shader, "cubemapRefractivity");
             UL_reflectivity = GL.GetUniformLocation(shader, "reflectivity");
             UL_specularHighlightDamper = GL.GetUniformLocation(shader, "specularHighlightDamper");
             UL_useNormalMap = GL.GetUniformLocation(shader, "useNormalMap");
+            UL_textureSampler = GL.GetUniformLocation(shader, "textureSampler");
+            UL_reflectionSampler = GL.GetUniformLocation(shader, "reflectionSampler");
+            UL_normalSampler = GL.GetUniformLocation(shader, "normalSampler");
+            UL_shadowSampler = GL.GetUniformLocation(shader, "shadowSampler");
         }
         public DiffuseMaterial(Color4 color, int textureHandle, bool instanced = false)
             : this(color, instanced)
@@ -111,6 +114,11 @@ namespace _3D_Renderer._Shading._Materials
             GL.Uniform1(UL_normalSampler, 2);
             GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, normalMapHandle);
+
+            //Bind normalmap:
+            GL.Uniform1(UL_shadowSampler, 3);
+            GL.ActiveTexture(TextureUnit.Texture3);
+            GL.BindTexture(TextureTarget.Texture2D, shadowMapHandle);
 
             //Uniforms:
             GL.Uniform4(UL_color, color);

@@ -58,19 +58,7 @@ namespace _3D_Renderer._Rendering
 
         }
 
-        public static void RenderRay(Vector3 position, Vector3 eulerAngles, 
-            Matrix4 projectionMatrix, Matrix4 cameraMatrix)
-        {
-            RenderRay(position, eulerAngles, projectionMatrix, cameraMatrix, Color4.Blue);
-        }
-        public static void RenderRay(Vector3 position, Vector3 eulerAngles,
-            Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
-        {
-            wireframeRay!.transform.rotation = eulerAngles;
-            RenderWireframeObject(wireframeRay, position,
-                Vector3.One, projectionMatrix, cameraMatrix, color);
-        }
-        public static void RenderRay(Matrix4 transformationMatrix,
+        public static void RenderUnitX(Matrix4 transformationMatrix,
             Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
         {
             RenderWireframeObject(wireframeRay, transformationMatrix,
@@ -84,7 +72,7 @@ namespace _3D_Renderer._Rendering
             RenderWireframeObject(wireframeRay, from, Vector3.One,
                 projectionMatrix, cameraMatrix, color);
         }
-        public static void RenderDirection(Vector3 from, Vector3 direction,
+        public static void RenderRay(Vector3 from, Vector3 direction,
             Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
         {
             Mesh rayMesh = wireframeRay!.GetMesh()!;

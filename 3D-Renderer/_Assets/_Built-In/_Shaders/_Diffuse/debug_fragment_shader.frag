@@ -12,6 +12,7 @@ out vec4 fragmentColor;
 uniform sampler2D textureSampler;
 uniform samplerCube reflectionSampler;
 uniform sampler2D normalSampler;
+uniform sampler2D shadowSampler;
 
 uniform float cubemapReflectivity = 0.5;
 uniform float cubemapRefractivity = 0.5;
@@ -49,7 +50,7 @@ vec4 DirectLight(int index){
 
     vec4 lightColor = vec4(light.lightColor, 1);
     vec3 lightFromDirection = lightDirections[index];
-    float lightStrength = max(dot(lightFromDirection, normal), 0) 
+    float lightStrength = min(max(dot(lightFromDirection, normal), 0), 1)
         * light.lightStrength;
     float lightStrengthClamped = max(lightStrength, 0);
     

@@ -1,13 +1,6 @@
 ﻿using _3D_Renderer._Behaviour;
-using _3D_Renderer._Geometry;
 using _3D_Renderer._Saves;
 using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace _3D_Renderer._Camera
 {

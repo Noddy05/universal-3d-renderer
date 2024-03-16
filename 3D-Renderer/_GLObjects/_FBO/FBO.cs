@@ -7,15 +7,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace _3D_Renderer._GLObjects
+namespace _3D_Renderer._GLObjects._FBO
 {
     internal class FBO : EasyUnload
     {
-        private int framebuffer;
-        private int depthBuffer;
-        private int depthTexture;
-        private int texture;
-        private Vector2i size;
+        protected int framebuffer;
+        protected int depthBuffer;
+        protected int depthTexture;
+        protected int texture;
+        protected Vector2i size;
 
         public int GetFramebufferHandle() => framebuffer;
         public int GetDepthbufferHandle() => depthBuffer;
@@ -29,14 +29,14 @@ namespace _3D_Renderer._GLObjects
             CreateFramebuffer();
         }
 
-        public void SetSize(Vector2i size) => this.size = size;
+        public virtual void SetSize(Vector2i size) => this.size = size;
 
-        public void BindFramebuffer()
+        public virtual void BindFramebuffer()
         {
             BindFramebuffer(framebuffer, size.X, size.Y);
         }
 
-        public void UnbindFramebuffer()
+        public virtual void UnbindFramebuffer()
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             Window? gameWindow = Program.GetWindow();
@@ -46,14 +46,14 @@ namespace _3D_Renderer._GLObjects
             GL.Viewport(0, 0, gameWindow.Size.X, gameWindow.Size.Y);
         }
 
-        private void BindFramebuffer(int frameBuffer, int width, int height)
+        protected virtual void BindFramebuffer(int frameBuffer, int width, int height)
         {
             GL.BindTexture(TextureTarget.Texture2D, 0);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, frameBuffer);
             GL.Viewport(0, 0, width, height);
         }
 
-        private void CreateFramebuffer()
+        protected virtual void CreateFramebuffer()
         {
             int framebuffer = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
@@ -61,12 +61,12 @@ namespace _3D_Renderer._GLObjects
             this.framebuffer = framebuffer;
         }
 
-        public void CreateTextureAttachment()
+        public virtual void CreateTextureAttachment()
         {
             int texture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, texture);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, size.X, size.Y, 0,
-                PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+                PixelFormat.Rgb, PixelType.UnsignedByte, nint.Zero);
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
@@ -74,12 +74,12 @@ namespace _3D_Renderer._GLObjects
             this.texture = texture;
         }
 
-        public void CreateDepthTextureAttachment()
+        public virtual void CreateDepthTextureAttachment()
         {
             int texture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, texture);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent32, size.X, size.Y, 0,
-                PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
+                PixelFormat.DepthComponent, PixelType.UnsignedByte, nint.Zero);
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Linear);
@@ -87,7 +87,7 @@ namespace _3D_Renderer._GLObjects
             depthTexture = texture;
         }
 
-        public void CreateDepthBufferAttachment()
+        public virtual void CreateDepthBufferAttachment()
         {
             int depthBuffer = GL.GenBuffer();
             GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, depthBuffer);
@@ -112,6 +112,7 @@ namespace _3D_Renderer._GLObjects
             GL.DeleteFramebuffer(framebuffer);
             GL.DeleteRenderbuffer(depthBuffer);
             GL.DeleteTexture(texture);
+            GL.DeleteTexture(depthTexture);
 
             disposed = true;
         }

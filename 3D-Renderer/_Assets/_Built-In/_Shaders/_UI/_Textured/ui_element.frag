@@ -11,5 +11,5 @@ void main(){
     //Combine texture and color
     vec4 sampledTexture = texture(textureSampler, vTexCoords);
     vec4 unlitColor = color * sampledTexture;
-    fragmentColor = unlitColor;
+    fragmentColor = vec4(unlitColor.xyz, 1);
 }

@@ -19,15 +19,20 @@ namespace _3D_Renderer._Rendering._Renderers
     /// </summary>
     internal class DefaultRenderer : Renderer
     {
+        public bool gizmosEnabled;
+
         public override void RenderCollection(string collection, Camera camera,
             Matrix4 projectionMatrix, Matrix4 cameraMatrix)
         {
             Frustum frustum = null;
-            if (camera.GetType() == typeof(FreeCamera))
+            if(camera != null)
             {
-                FreeCamera cam = (FreeCamera)camera;
-                frustum = cam.CameraFrustum();
-                frustum.frustumRotationMatrix = cam.RotationMatrix();
+                if (camera.GetType() == typeof(FreeCamera))
+                {
+                    FreeCamera cam = (FreeCamera)camera;
+                    frustum = cam.CameraFrustum();
+                    frustum.frustumRotationMatrix = cam.RotationMatrix();
+                }
             }
 
             foreach (Renderable renderable in SceneHierarchy.GetCollection(collection))
@@ -50,7 +55,8 @@ namespace _3D_Renderer._Rendering._Renderers
                 }
 
                 //Draw bounding box for renderable:
-                DrawHitboxes(renderable, projectionMatrix, cameraMatrix);
+                if(gizmosEnabled) 
+                    DrawHitboxes(renderable, projectionMatrix, cameraMatrix);
 
                 int tris = renderable.ApplyRenderable(projectionMatrix, cameraMatrix);
                 if (tris <= 0) //If mesh is null skip this renderable.

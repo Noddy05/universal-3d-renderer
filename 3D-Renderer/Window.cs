@@ -7,7 +7,6 @@ using _3D_Renderer._Shading;
 using _3D_Renderer._Renderable;
 using _3D_Renderer._Import;
 using _3D_Renderer._Camera;
-using _3D_Renderer._Rendering;
 using _3D_Renderer._Rendering._Renderers;
 using _3D_Renderer._Renderable._GameObject;
 using _3D_Renderer._Shading._Materials;
@@ -16,12 +15,12 @@ using _3D_Renderer._Renderable._UIElement;
 using _3D_Renderer._Generation;
 using _3D_Renderer._Renderable._Cubemap;
 using _3D_Renderer._Behaviour;
-using _3D_Renderer._GLObjects;
 using _3D_Renderer._GLObjects._UBO;
 using Font = _3D_Renderer._Import.Font;
 using _3D_Renderer._SceneHierarchy;
 using _3D_Renderer._Saves;
-using System.Reflection;
+using _3D_Renderer._Editor;
+using _3D_Renderer._GLObjects._FBO;
 
 namespace _3D_Renderer
 {
@@ -55,11 +54,13 @@ namespace _3D_Renderer
         private Material defaultMaterial;
         public Material GetDefaultMaterial() => defaultMaterial;
         //Renderers
-        private Renderer defaultRenderer;
+        private DefaultRenderer defaultRenderer;
+        private ShadowMapRenderer shadowRenderer;
         private UIRenderer uiRenderer;
+        private EditorUI editorUI;
 
         //Temp:
-        private FBO sceneFBO;
+        private FBO shadowMapFBO;
         private int fboOutputTexture;
         private int cmuSerifHandle;
         private int timesNewRomanHandle;
@@ -85,8 +86,6 @@ namespace _3D_Renderer
         protected override void OnLoad()
         {
             base.OnLoad();
-
-            EditorMemory.LoadLatestSave();
 
             //Clear color and backface culling:
             GL.ClearColor(Color.PeachPuff);
@@ -127,7 +126,6 @@ namespace _3D_Renderer
             SceneHierarchy.NewCollection("Canvas");
 
             //Populate scene and instantiate RenderStats:
-            PopulateScene();
             renderStats = new RenderStats();
 
 
@@ -144,7 +142,14 @@ namespace _3D_Renderer
             UBO.UpdateUBO();
 
             EditorMemory.AttachObject("EditorCamera", editorCamera);
-            EditorMemory.AttachObject("WindowState", this);
+            //EditorMemory.AttachObject("WindowState", this);
+
+            editorUI = new EditorUI(editorCamera);
+
+            shadowMapFBO = new ShadowMapFBO(new Vector2i((int)(Size.X * 0.3f), (int)(Size.Y * 0.3f)));
+            shadowRenderer = new ShadowMapRenderer();
+
+            PopulateScene();
         }
 
 
@@ -159,11 +164,6 @@ namespace _3D_Renderer
         private void PopulateScene()
         {
             outlineMaterial = new OutlineMaterial(Color4.Red);
-
-            sceneFBO = new FBO(new Vector2i((int)(Size.X * 0.3f), (int)(Size.Y * 0.3f)));
-            sceneFBO.CreateTextureAttachment();
-            sceneFBO.CreateDepthTextureAttachment();
-            sceneFBO.UnbindFramebuffer();
 
             #region Skybox
             //Skybox:
@@ -192,6 +192,7 @@ namespace _3D_Renderer
             GameObject gameObject = new GameObject();
             DiffuseMaterial material = new DiffuseMaterial(Color4.White, defaultTextureHandle, 
                 brickNormalHandle, cubemapTextureHandle);
+            material.shadowMapHandle = shadowMapFBO.GetTextureHandle();
             gameObject.SetMaterial(material);
             gameObject.SetMesh(suzanneMesh);
             material.useNormalMap = true;
@@ -274,20 +275,20 @@ namespace _3D_Renderer
 
             #region UI
             //UI:
-            Material uiMaterial = new UIMaterial(Color4.White, sceneFBO.GetTextureHandle());
+            Material uiMaterial = new UIMaterial(Color4.White, shadowMapFBO.GetDepthTextureHandle());
 
             UIElement uiElement = new UIElement();
             uiElement.SetMaterial(uiMaterial);
             float scale = 0.3f;
             uiElement.transform.scale *= scale;
             uiElement.transform.position += Vector3.One * (1 - scale);
-            //canvas.renderables.Add(uiElement);
+            SceneHierarchy.AddRenderable("Canvas", uiElement);
             #endregion
 
             #region Text
             //Text
             Font timesNewRomanFont = FontLoader.GetFont(timesNewRomanHandle);
-            Mesh[] meshes = MeshGeneration.Text(timesNewRomanHandle, "Hello Mister!",
+            Mesh[] meshes = MeshGeneration.Text(timesNewRomanHandle, "In-Game text!",
                 out float textWidth);
             Material[] materials = new Material[meshes.Length];
             GameObject[] textObjects = new GameObject[meshes.Length];
@@ -300,7 +301,9 @@ namespace _3D_Renderer
                 textObjects[i].SetMesh(meshes[i]);
             }
 
-            //canvas.renderables.Add(textObjects[0]);
+            textObjects[0].transform.position -= Vector3.UnitY * 0.8f + Vector3.UnitX * 0.7f;
+            textObjects[0].transform.scale /= 2f;
+            SceneHierarchy.AddRenderable("Canvas", textObjects[0]);
 
             Material cmuFontMaterial = new UITextMaterial(Color4.White,
                     FontLoader.GetFont(cmuSerifHandle).textureAtlasHandle[0]);
@@ -346,27 +349,26 @@ namespace _3D_Renderer
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             timeSinceStartup += args.Time;
-            temp.transform.rotation.Y = (float)timeSinceStartup * 0.45f;
-            candle.transform.rotation.Y = (float)timeSinceStartup * 0.6f;
+            //temp.transform.rotation.Y = (float)timeSinceStartup * 0.45f;
+            //candle.transform.rotation.Y = (float)timeSinceStartup * 0.6f;
 
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit
-                | ClearBufferMask.StencilBufferBit);
             //Render everything:
-
+            DefaultRender();
+            shadowMapFBO.BindFramebuffer();
+            LightRender();
+            shadowMapFBO.UnbindFramebuffer();
+            /*
             //Background (skybox):
             GL.Disable(EnableCap.DepthTest);
             defaultRenderer.RenderCollection("Background", editorCamera,
                 editorCamera.GetProjectionMatrix(), editorCamera.RotationMatrix());
 
             GL.Enable(EnableCap.DepthTest);
-            //sceneFBO.BindFramebuffer();
-            //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             defaultRenderer.RenderCollection("Scene", editorCamera,
                 editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix());
-
-
-            //sceneFBO.UnbindFramebuffer();
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            */
 
             //Instanced:
             Random rand = new Random(1);
@@ -386,10 +388,13 @@ namespace _3D_Renderer
                 instanceTransform.rotation = new Vector3(0, -theta - MathF.PI / 2, 0);
                 matrices[i] = instanceTransform.TransformationMatrix();
             }
+            matrices[0] = Matrix4.Identity;
+            matrices[0] *= Matrix4.CreateScale(3);
             candle.GetMesh()!.UpdateInstancedTransformations(matrices);
 
             UBO.directionalLightData.GetDirectionalLight(0).SetLightCastFromDirection
-                (new Vector3(1, 1, 1).Normalized());
+                (new Vector3(MathF.Sin((float)timeSinceStartup), 0, 
+                MathF.Cos((float)timeSinceStartup)).Normalized());
             UBO.UpdateUBO();
 
 
@@ -398,35 +403,31 @@ namespace _3D_Renderer
             uiRenderer.RenderCollection("Canvas", editorCamera,
                 Matrix4.Identity, editorCamera.CameraMatrix());
 
-            float distanceFromCamera = 15f;
-            Vector3 cursorOrigin = -editorCamera.Position() - editorCamera.Forward() * distanceFromCamera;
-            WireframeRenderer.RenderDirection(cursorOrigin, new Vector3(1, 0, 0), 
-                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Red);
-
-            WireframeRenderer.RenderDirection(cursorOrigin, new Vector3(0, 1, 0), 
-                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Lime);
-
-            WireframeRenderer.RenderDirection(cursorOrigin, new Vector3(0, 0, 1), 
-                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Blue);
-
-            Matrix4 transformationMatrix = new Matrix4(new Vector4(0, 1, 0, 0),
-                new Vector4(0, 0, 1, 0), new Vector4(1, 0, 0, 0), new Vector4(0, 0, 0, 1));
-            Vector3 transformedUnitX = (transformationMatrix * new Vector4(1, 0, 0, 0)).Xyz;
-            Vector3 transformedUnitY = (transformationMatrix * new Vector4(0, 1, 0, 0)).Xyz;
-            Vector3 transformedUnitZ = (transformationMatrix * new Vector4(0, 0, 1, 0)).Xyz;
-
-            WireframeRenderer.RenderDirection(cursorOrigin + 2 * Vector3.UnitY, transformedUnitX,
-                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Red);
-
-            WireframeRenderer.RenderDirection(cursorOrigin + 2 * Vector3.UnitY, transformedUnitY,
-                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Lime);
-
-            WireframeRenderer.RenderDirection(cursorOrigin + 2 * Vector3.UnitY, transformedUnitZ,
-                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix(), Color4.Blue);
+            editorUI.DrawOrientation();
 
             SwapBuffers();
 
             base.OnRenderFrame(args);
+        }
+
+        private void DefaultRender()
+        {
+            defaultRenderer.gizmosEnabled = true;
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            GL.Disable(EnableCap.DepthTest);
+            defaultRenderer.RenderCollection("Background", editorCamera,
+                editorCamera.GetProjectionMatrix(), editorCamera.RotationMatrix());
+
+            GL.Enable(EnableCap.DepthTest);
+
+            defaultRenderer.RenderCollection("Scene", editorCamera,
+                editorCamera.GetProjectionMatrix(), editorCamera.CameraMatrix());
+        }
+        private void LightRender()
+        {
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            shadowRenderer.RenderCollection("Scene", UBO.directionalLightData.GetDirectionalLight(0));
         }
     }
 }

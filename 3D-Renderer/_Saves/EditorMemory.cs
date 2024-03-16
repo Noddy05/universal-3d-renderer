@@ -109,10 +109,5 @@ namespace _3D_Renderer._Saves
                 }
             }
         }
-
-        public static void LoadLatestSave()
-        {
-
-        }
     }
 }
