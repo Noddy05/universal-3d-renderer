@@ -153,12 +153,14 @@ namespace _3D_Renderer
             });
             SaveFileParser.AddDecoder(typeof(FreeCamera), (string data) =>
             {
-                return SaveFileParser.GetDecoder(typeof(Vector3));
+                return new FreeCamera(100, 0.1f, 1000, 0, 0);
             });
 
             EditorMemory.AttachObject("EditorCamera", editorCamera);
             EditorMemory.AttachObject("WindowState", this);
 
+            //To test the decoder:
+            Debug.Log(testCamera.GetFOV()); 
 
             editorUI = new EditorUI(editorCamera);
 

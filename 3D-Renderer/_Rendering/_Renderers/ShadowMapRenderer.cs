@@ -43,7 +43,8 @@ namespace _3D_Renderer._Rendering._Renderers
                 @"../../../_Assets/_Built-In/_Shaders/_Shadow/shadow.frag");
             UL_instancedTransformationMatrix = GL.GetUniformLocation(
                 instancedShadowShader, "transformationMatrix");
-            UL_projectionMatrix = GL.GetUniformLocation(instancedShadowShader, "projectionMatrix");
+            UL_instancedProjectionMatrix = 
+                GL.GetUniformLocation(instancedShadowShader, "projectionMatrix");
             shadowMaterialInstanced = new Material(instancedShadowShader);
         }
 
@@ -54,9 +55,9 @@ namespace _3D_Renderer._Rendering._Renderers
             float height = 50 * window.Size.Y / (float)window.Size.X;
 
             projectionMatrix = Matrix4.CreateOrthographic(width, height, 0f, distance * 2f);
-            //lightMatrix = directionalLight.CalculateRotationMatrix()
-            //    * Matrix4.CreateTranslation(-Vector3.UnitZ * distance);
-            lightMatrix = Matrix4.Identity;
+            lightMatrix = directionalLight.CalculateRotationMatrix()
+                * Matrix4.CreateTranslation(-Vector3.UnitZ * distance);
+            //lightMatrix = Matrix4.Identity;
 
             //Should have frustum culling
             GL.Disable(EnableCap.CullFace);
@@ -81,7 +82,7 @@ namespace _3D_Renderer._Rendering._Renderers
 
                     GL.DrawElementsInstanced(PrimitiveType.Triangles, tris,
                         DrawElementsType.UnsignedInt, 0, instanceCount);
-                } 
+                }
                 else
                 {
                     //Draw regular:

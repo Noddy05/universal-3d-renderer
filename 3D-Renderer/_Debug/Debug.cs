@@ -10,7 +10,7 @@ internal static class Debug
     /// Writes message to console.
     /// </summary>
     /// <param name="str"></param>
-    public static void Print(string str)
+    public static void Print(object str)
     {
         Console.WriteLine(str);
     }
@@ -18,7 +18,7 @@ internal static class Debug
     /// <summary>
     /// Writes message to console, including when and where the message came from.
     /// </summary>
-    public static void Log(string str,
+    public static void Log(object str,
         [CallerMemberName] string callingMember = null,
         [CallerFilePath] string filePath = null,
         [CallerLineNumber] int lineNumber = 0)
@@ -30,7 +30,7 @@ internal static class Debug
     /// <summary>
     /// Writes a warning to console, including when and where the message came from.
     /// </summary>
-    public static void LogWarning(string str,
+    public static void LogWarning(object str,
         [CallerMemberName] string callingMember = null,
         [CallerFilePath] string filePath = null,
         [CallerLineNumber] int lineNumber = 0)
@@ -42,7 +42,7 @@ internal static class Debug
     /// <summary>
     /// Writes an error to console, including when and where the message came from.
     /// </summary>
-    public static void LogError(string str,
+    public static void LogError(object str,
         [CallerMemberName] string callingMember = null,
         [CallerFilePath] string filePath = null,
         [CallerLineNumber] int lineNumber = 0)
@@ -55,17 +55,17 @@ internal static class Debug
     /// Writes a fatal error to console, including when and where the message came from.
     /// <br></br>After writing it throws an exception that ends the current process.
     /// </summary>
-    public static void LogFatalError(string str,
+    public static void LogFatalError(object str,
         [CallerMemberName] string callingMember = null,
         [CallerFilePath] string filePath = null,
         [CallerLineNumber] int lineNumber = 0)
     {
         Log(str, ConsoleColor.Red, callingMember, 
             filePath, lineNumber);
-        throw new Exception(str);
+        throw new Exception(str.ToString()!);
     }
 
-    private static void Log(string str, ConsoleColor foregroundColor,
+    private static void Log(object str, ConsoleColor foregroundColor,
         [CallerMemberName] string callingMember = null,
         [CallerFilePath] string filePath = null,
         [CallerLineNumber] int lineNumber = 0)

@@ -18,6 +18,7 @@ namespace _3D_Renderer._Camera
         private float moveSpeed;
         //FOV is in radians
         private float fov, nearPlane, farPlane;
+        public float GetFOV() => fov;
 
         private Frustum cameraFrustum;
         public Frustum CameraFrustum() => cameraFrustum;
