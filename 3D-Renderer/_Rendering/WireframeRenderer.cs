@@ -2,6 +2,7 @@
 using _3D_Renderer._Import;
 using _3D_Renderer._Renderable;
 using _3D_Renderer._Renderable._GameObject;
+using _3D_Renderer._Renderable._Mesh;
 using _3D_Renderer._Shading._Materials;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;

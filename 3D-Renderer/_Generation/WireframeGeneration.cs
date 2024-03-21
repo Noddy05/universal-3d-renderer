@@ -1,5 +1,5 @@
 ﻿using _3D_Renderer._Import;
-using _3D_Renderer._Renderable;
+using _3D_Renderer._Renderable._Mesh;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 

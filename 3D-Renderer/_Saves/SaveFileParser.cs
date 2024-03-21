@@ -1,99 +1,40 @@
 ﻿using _3D_Renderer._Debug;
 using OpenTK.Mathematics;
 using System.Reflection;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace _3D_Renderer._Saves
 {
-    internal class SaveFileParser
+    /// <summary>
+    /// "SaveFileParser.cs" is a partial class, split into two: "SaveFileParser.cs" and "SaveFileCodecs.cs".
+    /// "SaveFileParser.cs" encodes and decodes objects, while "SaveFileCodecs.cs" keeps track of the
+    /// different codecs.
+    /// </summary>
+    internal static partial class SaveFileParser
     {
         public static string ParseToString(object obj, object fromObject, string savedAs)
         {
             Type type = obj.GetType();
-            if (type == typeof(string))
+            if (encoders.ContainsKey(type))
             {
-                return (string)obj;
+                return encoders[type](obj);
             }
-            if (type == typeof(Vector4))
-            {
-                Vector4 v = (Vector4)obj;
-                return $"{v.X};{v.Y};{v.Z};{v.W}";
-            }
-            if (type == typeof(Vector3))
-            {
-                Vector3 v = (Vector3)obj;
-                return $"{v.X};{v.Y};{v.Z}";
-            }
-            if (type == typeof(Vector2))
-            {
-                Vector3 v = (Vector3)obj;
-                return $"{v.X};{v.Y}";
-            }
-            if (type == typeof(float))
-            {
-                float v = (float)obj;
-                return v.ToString();
-            }
-            if (type == typeof(int))
-            {
-                int v = (int)obj;
-                return v.ToString();
-            }
-            if (type == typeof(double))
-            {
-                double v = (double)obj;
-                return v.ToString();
-            }
-
-            Debug.LogFatalError($"Object of type {obj.GetType().Name} " +
-                $"is not currently supported! (From: {fromObject.GetType().Name}, saving to " +
-                $"\"{savedAs}\")");
-            return ".";
+            Debug.LogWarning($"Decoder doesn't contain method to decode type: {type}!\n" +
+                $"Consider using AddDecoder(Type type, Decoder decoder).\n" +
+                $"(From: { fromObject.GetType().Name}, saved to \"{savedAs}\")");
+            return obj.ToString()!;
         }
 
         public static object ParseFromString(FieldInfo fieldInfo, string data)
         {
             //I swear switch statements dont work for this :crying emoji:
             Type type = fieldInfo.FieldType;
-            if (type == typeof(string))
+            if (decoders.ContainsKey(type))
             {
-                return data;
+                return decoders[type](data);
             }
-
-            string[] parts = data.Split(';');
-            if (type == typeof(Vector4))
-            {
-                Vector4 parsed = new Vector4();
-                parsed.X = float.Parse(parts[0]);
-                parsed.Y = float.Parse(parts[1]);
-                parsed.Z = float.Parse(parts[2]);
-                parsed.W = float.Parse(parts[3]);
-                return parsed;
-            }
-            if (type == typeof(Vector3))
-            {
-                Vector3 parsed = new Vector3();
-                parsed.X = float.Parse(parts[0]);
-                parsed.Y = float.Parse(parts[1]);
-                parsed.Z = float.Parse(parts[2]);
-                return parsed;
-            }
-            if (type == typeof(Vector2))
-            {
-                Vector2 parsed = new Vector2();
-                parsed.X = float.Parse(parts[0]);
-                parsed.Y = float.Parse(parts[1]);
-                return parsed;
-            }
-            if (type == typeof(float))
-            {
-                return float.Parse(parts[0]);
-            }
-            if (type == typeof(double))
-            {
-                return double.Parse(parts[0]);
-            }
-
-            Debug.LogFatalError($"Object of type {type.Name} is not currently supported!");
+            Debug.LogError($"Decoder doesn't contain method to decode type: {type}!\n" +
+                $"Consider using AddDecoder(Type type, Decoder decoder).\n");
             return null;
         }
     }

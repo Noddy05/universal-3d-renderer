@@ -15,11 +15,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Sources;
 
-namespace _3D_Renderer._Renderable
+namespace _3D_Renderer._Renderable._Mesh
 {
     internal class Mesh : IDisposable
     {
-        public string name;
+        public string name = "";
 
 
         private VBO vbo;
@@ -54,12 +54,12 @@ namespace _3D_Renderer._Renderable
             instances = count;
         }
 
-        private Vertex[] vertices = [];
+        protected Vertex[] vertices = [];
         public Vertex[] GetVertices() => vertices;
         public void SetVertices(Vertex[] vertices, BufferUsageHint hint)
         {
             this.vertices = vertices;
-            if(vbo != null)
+            if (vbo != null)
             {
                 vbo.Dispose();
             }
@@ -69,7 +69,7 @@ namespace _3D_Renderer._Renderable
             UpdateBoundingRadius(vertices);
         }
 
-        private int[] indices = [];
+        protected int[] indices = [];
         public int[] GetIndices() => indices;
         public void SetIndices(int[] indices, BufferUsageHint hint)
         {
@@ -87,7 +87,8 @@ namespace _3D_Renderer._Renderable
         /// <summary>
         /// Bind this when rendering mesh
         /// </summary>
-        public void Bind() {
+        public void Bind()
+        {
             GL.BindVertexArray(vao);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
         }
@@ -105,7 +106,7 @@ namespace _3D_Renderer._Renderable
         {
             instances = transformations.Length;
             maxInstances = instances;
-            if(instanceVBO != null)
+            if (instanceVBO != null)
             {
                 instanceVBO.Dispose();
             }
@@ -130,13 +131,16 @@ namespace _3D_Renderer._Renderable
         }
 
         #region Modification
-        public void FlipFacesUVsNormals()
+
+        #region Flipping
+
+        public virtual void FlipFacesUVsNormals()
         {
             FlipFaces();
             FlipUVs();
-            PermanentlyTransformNormals(Matrix4.CreateScale(1, -1, 1));
+            PermanentlyTransformNormals(Matrix4.CreateScale(-1));
         }
-        public void FlipFaces()
+        public virtual void FlipFaces()
         {
             int[] indices = ibo.GetIndices();
             for (int i = 0; i < indices.Length; i += 3)
@@ -147,18 +151,19 @@ namespace _3D_Renderer._Renderable
             }
             SetIndices(indices, BufferUsageHint.StaticDraw);
         }
-        public void FlipUVs()
+        public virtual void FlipUVs()
         {
             for (int i = 0; i < vertices.Length; i++)
             {
                 Vector2 texCoords = vertices[i].textureCoordinate;
-                vertices[i].textureCoordinate = new Vector2(1-texCoords.X, 1-texCoords.Y);
+                vertices[i].textureCoordinate = new Vector2(1 - texCoords.X, 1 - texCoords.Y);
             }
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float) * 8,
                 Vertex.VertexToFloatArray(vertices));
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         }
+        #endregion
 
         public Mesh CopyAsWireframe()
         {
@@ -170,7 +175,7 @@ namespace _3D_Renderer._Renderable
             int[] newIndices = new int[indices.Length * 2];
             for (int i = 0; i < indices.Length; i += 3)
             {
-                newIndices[i * 2    ] = indices[i];
+                newIndices[i * 2] = indices[i];
                 newIndices[i * 2 + 1] = indices[i + 1];
                 newIndices[i * 2 + 2] = indices[i + 1];
                 newIndices[i * 2 + 3] = indices[i + 2];
@@ -181,7 +186,6 @@ namespace _3D_Renderer._Renderable
             output.SetIndices(newIndices, BufferUsageHint.StaticDraw);
             return output;
         }
-        #endregion
 
         /// <summary>
         /// Transforms vertices in the <see cref="VBO"/> only. 
@@ -189,7 +193,7 @@ namespace _3D_Renderer._Renderable
         /// </summary>
         /// <param name="transformation"></param>
         /// <returns>Transformed Vertices</returns>
-        public Vertex[] TransformVertices(Matrix4 transformation)
+        public virtual Vertex[] TransformVertices(Matrix4 transformation)
         {
             Vertex[] transformedVertices = new Vertex[vertices.Length];
             for (int i = 0; i < vertices.Length; i++)
@@ -209,7 +213,7 @@ namespace _3D_Renderer._Renderable
         /// </summary>
         /// <param name="transformation"></param>
         /// <returns>Transformed Vertices</returns>
-        public void PermanentlyTransformVertices(Matrix4 transformation)
+        public virtual void PermanentlyTransformVertices(Matrix4 transformation)
         {
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -225,7 +229,7 @@ namespace _3D_Renderer._Renderable
         /// </summary>
         /// <param name="transformation"></param>
         /// <returns>Transformed Vertices</returns>
-        public Vertex[] TransformNormals(Matrix4 transformation)
+        public virtual Vertex[] TransformNormals(Matrix4 transformation)
         {
             Vertex[] transformedVertices = new Vertex[vertices.Length];
             for (int i = 0; i < vertices.Length; i++)
@@ -238,7 +242,7 @@ namespace _3D_Renderer._Renderable
 
             return transformedVertices;
         }
-        public void PermanentlyTransformNormals(Matrix4 transformation)
+        public virtual void PermanentlyTransformNormals(Matrix4 transformation)
         {
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -248,21 +252,13 @@ namespace _3D_Renderer._Renderable
 
             UpdateVBO(vertices);
         }
-
-        public void UpdateVBO(Vertex[] vertices)
-        {
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float) * 8,
-                Vertex.VertexToFloatArray(vertices));
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-        }
         /// <summary>
         /// Transforms vertices in the <see cref="VBO"/> only. 
         /// This means that the vertices in the mesh is not affected by this change
         /// </summary>
         /// <param name="transformation"></param>
         /// <returns>Transformed Vertices</returns>
-        public Vertex[] TransformUVs(Matrix4 transformation)
+        public virtual Vertex[] TransformUVs(Matrix4 transformation)
         {
             Vertex[] transformedVertices = new Vertex[vertices.Length];
             for (int i = 0; i < vertices.Length; i++)
@@ -279,7 +275,7 @@ namespace _3D_Renderer._Renderable
 
             return transformedVertices;
         }
-        public void PermanentlyTransformUVs(Matrix4 transformation)
+        public virtual void PermanentlyTransformUVs(Matrix4 transformation)
         {
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -288,6 +284,15 @@ namespace _3D_Renderer._Renderable
                     * transformation).Xy;
             }
 
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float) * 8,
+                Vertex.VertexToFloatArray(vertices));
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        }
+        #endregion
+
+        public void UpdateVBO(Vertex[] vertices)
+        {
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float) * 8,
                 Vertex.VertexToFloatArray(vertices));
@@ -313,18 +318,9 @@ namespace _3D_Renderer._Renderable
 
             //Cache info:
             Vertex[] aVerts = a.vertices;
-            int[] aTris;
-            if (a.ibo != null)
-                aTris = a.ibo.GetIndices();
-            else 
-                aTris = [];
-
+            int[] aTris = a.indices;
             Vertex[] bVerts = b.vertices;
-            int[] bTris;
-            if (b.ibo != null)
-                bTris = b.ibo.GetIndices();
-            else
-                bTris = [];
+            int[] bTris = b.indices;
 
             Vertex[] newVertices = new Vertex[aVerts.Length + bVerts.Length];
             int[] newIndices = new int[aTris.Length + bTris.Length];

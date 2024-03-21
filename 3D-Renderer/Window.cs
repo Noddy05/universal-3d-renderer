@@ -4,7 +4,6 @@ using OpenTK.Windowing.Common;
 using OpenTK.Graphics.OpenGL;
 using System.Drawing;
 using _3D_Renderer._Shading;
-using _3D_Renderer._Renderable;
 using _3D_Renderer._Import;
 using _3D_Renderer._Camera;
 using _3D_Renderer._Rendering._Renderers;
@@ -21,6 +20,7 @@ using _3D_Renderer._SceneHierarchy;
 using _3D_Renderer._Saves;
 using _3D_Renderer._Editor;
 using _3D_Renderer._GLObjects._FBO;
+using _3D_Renderer._Renderable._Mesh;
 
 namespace _3D_Renderer
 {
@@ -49,6 +49,10 @@ namespace _3D_Renderer
         public RenderStats renderStats;
         private int defaultTextureHandle = -1;
         public int GetDefaultTextureHandle() => defaultTextureHandle;
+
+        [SaveOnClose]
+        private FreeCamera testCamera;
+
         private FreeCamera editorCamera;
         public FreeCamera GetEditorCamera() => editorCamera;
         private Material defaultMaterial;
@@ -141,8 +145,20 @@ namespace _3D_Renderer
                 .SetLightCastFromDirection(new Vector3(1, 1, 1).Normalized());
             UBO.UpdateUBO();
 
+            testCamera = new FreeCamera(10, 0.1f, 1000, 0, 0);
+            SaveFileParser.AddEncoder(typeof(FreeCamera), (object obj) =>
+            {
+                FreeCamera freeCamera = (FreeCamera)obj;
+                return SaveFileParser.GetEncoder(typeof(Vector3))(freeCamera.Up());
+            });
+            SaveFileParser.AddDecoder(typeof(FreeCamera), (string data) =>
+            {
+                return SaveFileParser.GetDecoder(typeof(Vector3));
+            });
+
             EditorMemory.AttachObject("EditorCamera", editorCamera);
-            //EditorMemory.AttachObject("WindowState", this);
+            EditorMemory.AttachObject("WindowState", this);
+
 
             editorUI = new EditorUI(editorCamera);
 
@@ -314,7 +330,6 @@ namespace _3D_Renderer
             textObject.transform.scale /= textWidth2 / 2;
             //canvas.renderables.Add(textObject);
             #endregion
-
         }
 
 

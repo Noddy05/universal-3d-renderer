@@ -1,5 +1,6 @@
 ﻿using _3D_Renderer._Import;
 using _3D_Renderer._Renderable;
+using _3D_Renderer._Renderable._Mesh;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
@@ -10,7 +11,7 @@ namespace _3D_Renderer._Generation
         #region Generations of type O(1)
         public static Mesh Quad()
         {
-            Mesh quad = new Mesh();
+            MeshBuilder quad = new MeshBuilder();
 
             //   0------1
             //   | \    |
@@ -26,10 +27,10 @@ namespace _3D_Renderer._Generation
                 0, 2, 1,
                 0, 3, 2,
             ];
-            quad.SetVertices(vertices, BufferUsageHint.StaticDraw);
-            quad.SetIndices(indices, BufferUsageHint.StaticDraw);
+            quad.SetVertices(vertices);
+            quad.SetIndices(indices);
 
-            return quad;
+            return quad.Build();
         }
         public static Mesh FontQuad(float xOffset, float yOffset, float width, 
             float height, float tx, float ty)

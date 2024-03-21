@@ -7,6 +7,7 @@ using _3D_Renderer._SceneHierarchy;
 using _3D_Renderer._GLObjects._UBO._UniformBlocks;
 using _3D_Renderer._GLObjects._UBO;
 using _3D_Renderer._Shading;
+using _3D_Renderer._Renderable._Mesh;
 
 namespace _3D_Renderer._Rendering._Renderers
 {

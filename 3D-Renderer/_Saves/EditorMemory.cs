@@ -4,6 +4,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -17,6 +18,8 @@ namespace _3D_Renderer._Saves
         {
             Program.GetWindow().Unload += SaveNow;
         }
+
+        private static Dictionary<string, object> objectsToSave = new Dictionary<string, object>();
 
         private const string saveFileName = "editor_auto_save.txt";
         private static string? latestSaveLocation;
@@ -36,13 +39,17 @@ namespace _3D_Renderer._Saves
         }
         //End
 
+        public static void ClearSave()
+        {
+            File.WriteAllText(fullPath!, string.Empty);
+        }
+
         private static void SaveNow()
         {
             if (latestSaveLocation == null || fullPath == null) {
                 Debug.LogFatalError("EditorMemory has nowhere to save to!");
             }
 
-            FreeCamera editorView = Program.GetWindow().GetEditorCamera();
             if (!File.Exists(fullPath))
             {
                 //File doesn't exists
@@ -59,16 +66,16 @@ namespace _3D_Renderer._Saves
                     foreach (FieldInfo field in fieldsWithAttribute)
                     {
                         object value = field.GetValue(objectSaved.Value)!;
-                        stream.WriteLine($"\"{objectSaved.Key}\" " +
+                        string line = $"\"{objectSaved.Key}\" " +
                             objectSaved.Value.GetType().Name +
-                            $" {field.Name} {SaveFileParser.ParseToString(value, 
-                            objectSaved.Value, objectSaved.Key)}");
+                            $" {field.Name} {SaveFileParser.ParseToString(value,
+                            objectSaved.Value, objectSaved.Key)}";
+                        stream.WriteLine(line);
                     }
                 }
             }
         }
 
-        private static Dictionary<string, object> objectsToSave = new Dictionary<string, object>();
         public static void AttachObject(string name, object obj)
         {
             objectsToSave.Add(name, obj);
@@ -86,6 +93,7 @@ namespace _3D_Renderer._Saves
                     continue;
 
                 string startsWith = $"\"{name}\" ";
+
                 //If this line refers to this object:
                 if (lines[i].StartsWith(startsWith))
                 {
@@ -104,8 +112,23 @@ namespace _3D_Renderer._Saves
                         Debug.LogError("Field info is null!");
                         continue;
                     }
+
+                    //Make sure Field still has the SaveOnClose attribute
+                    if (!Attribute.IsDefined(fieldInfo, typeof(SaveOnCloseAttribute)))
+                        continue;
+
                     object value = SaveFileParser.ParseFromString(fieldInfo, segmentedString[3]);
-                    fieldInfo.SetValue(obj, value);
+                    if(value.GetType() == fieldInfo.FieldType)
+                    {
+                        fieldInfo.SetValue(obj, value);
+                    } 
+                    else
+                    {
+                        Debug.LogError($"Error uploading saved data!\n" +
+                        $"Info(type: {typeName}, saved as: {segmentedString[0]}" +
+                        $", variable name: {segmentedString[1]}.{segmentedString[2]}, " +
+                        $"saved data: {segmentedString[3]})\n");
+                    }
                 }
             }
         }
