@@ -81,7 +81,7 @@ namespace _3D_Renderer._Shading._Materials
             this.normalMapHandle = normalMapHandle;
             useNormalMap = true;
         }
-        public DiffuseMaterial(Color4 color, int textureHandle, 
+        public DiffuseMaterial(Color4 color, int textureHandle,
             int normalMapHandle, int reflectionCubemapTexture, bool instanced = false)
             : this(color, textureHandle, normalMapHandle, instanced)
         {

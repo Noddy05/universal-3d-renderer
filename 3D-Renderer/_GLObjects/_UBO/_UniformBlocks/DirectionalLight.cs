@@ -9,6 +9,8 @@ namespace _3D_Renderer._GLObjects._UBO._UniformBlocks
 {
     internal class DirectionalLight
     {
+        public Matrix4 projectionMatrix;
+
         private Color4 color;
         public Color4 GetLightColor() => color;
         public void SetLightColor(Color4 lightColor) =>
@@ -49,6 +51,7 @@ namespace _3D_Renderer._GLObjects._UBO._UniformBlocks
                 secondaryAxis = new Vector3(0, 0, 1) * CustomSignFunction(dot);
                 mat4.Column0 = new Vector4(primaryAxis, 0);
                 mat4.Column1 = new Vector4(secondaryAxis, 0);
+                return mat4;
             }
 
             float primaryZ = forward.X /

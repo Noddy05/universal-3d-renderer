@@ -9,7 +9,7 @@ namespace _3D_Renderer._Generation
     internal class MeshGeneration
     {
         #region Generations of type O(1)
-        public static Mesh Quad()
+        private static MeshBuilder QuadBuilder()
         {
             MeshBuilder quad = new MeshBuilder();
 
@@ -18,53 +18,81 @@ namespace _3D_Renderer._Generation
             //   |    \ |
             //   3------2
             Vertex[] vertices = [
-                new Vertex(new Vector3(-1,  1, 0), new Vector3(0, 0, 1), new Vector2(0, 1)), 
-                new Vertex(new Vector3( 1,  1, 0), new Vector3(0, 0, 1), new Vector2(1, 1)), 
-                new Vertex(new Vector3( 1, -1, 0), new Vector3(0, 0, 1), new Vector2(1, 0)), 
-                new Vertex(new Vector3(-1, -1, 0), new Vector3(0, 0, 1), new Vector2(0, 0)), 
+                new Vertex(new Vector3(-1, 1, 0), new Vector3(0, 0, 1), new Vector2(0, 1)),
+                new Vertex(new Vector3(1, 1, 0), new Vector3(0, 0, 1), new Vector2(1, 1)),
+                new Vertex(new Vector3(1, -1, 0), new Vector3(0, 0, 1), new Vector2(1, 0)),
+                new Vertex(new Vector3(-1, -1, 0), new Vector3(0, 0, 1), new Vector2(0, 0)),
             ];
             int[] indices = [
-                0, 2, 1,
-                0, 3, 2,
+                0,
+                2,
+                1,
+                0,
+                3,
+                2,
             ];
             quad.SetVertices(vertices);
             quad.SetIndices(indices);
 
-            return quad.Build();
+            return quad;
         }
-        public static Mesh FontQuad(float xOffset, float yOffset, float width, 
+        /// <summary>
+        /// Generates a quad.
+        /// </summary>
+        /// <returns></returns>
+        public static Mesh Quad()
+            => QuadBuilder().Build(BufferUsageHint.StaticDraw);
+
+        private static MeshBuilder FontQuadBuilder(float xOffset, float yOffset, float width,
             float height, float tx, float ty)
         {
-            Mesh quad = new Mesh();
+            MeshBuilder quad = new MeshBuilder();
 
             //   0------1
             //   | \    |
             //   |    \ |
             //   3------2
             Vertex[] vertices = [
-                new Vertex(new Vector3(xOffset, - yOffset, 0), 
+                new Vertex(new Vector3(xOffset, -yOffset, 0),
                     new Vector3(0, 0, 1), new Vector2(tx, ty)),
 
-                new Vertex(new Vector3(xOffset + width, -yOffset, 0), 
+                new Vertex(new Vector3(xOffset + width, -yOffset, 0),
                     new Vector3(0, 0, 1), new Vector2(tx + width, ty)),
 
-                new Vertex(new Vector3(xOffset + width, -yOffset - height, 0), 
+                new Vertex(new Vector3(xOffset + width, -yOffset - height, 0),
                     new Vector3(0, 0, 1), new Vector2(tx + width, ty + height)),
 
-                new Vertex(new Vector3(xOffset, -yOffset - height, 0), 
+                new Vertex(new Vector3(xOffset, -yOffset - height, 0),
                     new Vector3(0, 0, 1), new Vector2(tx, ty + height)),
             ];
             int[] indices = [
-                0, 2, 1,
-                0, 3, 2,
+                0,
+                2,
+                1,
+                0,
+                3,
+                2,
             ];
-            quad.SetVertices(vertices, BufferUsageHint.StaticDraw);
-            quad.SetIndices(indices, BufferUsageHint.StaticDraw);
+            quad.SetVertices(vertices);
+            quad.SetIndices(indices);
 
             return quad;
         }
+        /// <summary>
+        /// Generates a quad, used for generating text meshes.
+        /// </summary>
+        /// <param name="xOffset"></param>
+        /// <param name="yOffset"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="tx"></param>
+        /// <param name="ty"></param>
+        /// <returns></returns>
+        public static Mesh FontQuad(float xOffset, float yOffset, float width,
+            float height, float tx, float ty)
+            => FontQuadBuilder(xOffset, yOffset, width, height, tx, ty).Build(BufferUsageHint.StaticDraw);
 
-        public static Mesh SmoothCube() //Smooth cube being a cube with shared vertices
+        private static MeshBuilder SmoothCubeBuilder()
         {
             //     7---------6
             //    /|        /|
@@ -101,20 +129,24 @@ namespace _3D_Renderer._Generation
                 5, 4, 0,   3, 6, 2, 
             ];
 
-            Mesh cube = new Mesh();
-            cube.SetVertices(vertices, BufferUsageHint.StaticDraw);
-            cube.SetIndices(indices, BufferUsageHint.StaticDraw);
+            MeshBuilder cube = new MeshBuilder();
+            cube.SetVertices(vertices);
+            cube.SetIndices(indices);
 
             return cube;
         }
+        /// <summary>
+        /// Generates a cube with soft edges.
+        /// </summary>
+        /// <returns></returns>
+        public static Mesh SmoothCube() //Smooth cube being a cube with shared vertices
+            => SmoothCubeBuilder().Build(BufferUsageHint.StaticDraw);
 
         #endregion
 
         #region More Complex Generations
-        public static Mesh Circle(int vertices, bool centerVertex = false)
+        private static MeshBuilder CircleBuilder(int vertices, bool centerVertex = false)
         {
-            //TODO add indices:
-
             if (vertices < 3)
                 throw new Exception("Trying to generate circle mesh failed! " +
                     "(MeshGeneration.CircleMesh(a) requires a ≥ 3)");
@@ -126,7 +158,7 @@ namespace _3D_Renderer._Generation
             {
                 float px = i / (float)vertices * 2 * MathF.PI;
                 Vector3 pos = new Vector3(MathF.Cos(px), 0, MathF.Sin(px));
-                verts[i + centerVertexI] = new Vertex(pos, Vector3.UnitY, 
+                verts[i + centerVertexI] = new Vertex(pos, Vector3.UnitY,
                     new Vector2(pos.X, pos.Z));
             }
             if (centerVertex)
@@ -136,23 +168,23 @@ namespace _3D_Renderer._Generation
             #endregion
             int[] indices;
             #region Indices
-            if(centerVertex)
+            if (centerVertex)
             {
                 indices = new int[3 * vertices];
-                for(int i = 0; i < vertices; i++)
+                for (int i = 0; i < vertices; i++)
                 {
                     indices[3 * i + 0] = 0;
                     indices[3 * i + 1] = i + 1;
-                    if(i + 1 >= vertices)
+                    if (i + 1 >= vertices)
                     {
                         indices[3 * i + 2] = 1;
-                    } 
+                    }
                     else
                     {
                         indices[3 * i + 2] = i + 2;
                     }
                 }
-            } 
+            }
             else
             {
                 indices = new int[3 * (vertices - 2)];
@@ -165,20 +197,28 @@ namespace _3D_Renderer._Generation
             }
 
             #endregion
-            Mesh circle = new Mesh();
-            circle.SetVertices(verts, BufferUsageHint.StaticDraw);
-            circle.SetIndices(indices, BufferUsageHint.StaticDraw);
+            MeshBuilder circle = new MeshBuilder();
+            circle.SetVertices(verts);
+            circle.SetIndices(indices);
 
             return circle;
         }
+        /// <summary>
+        /// Creates a polygon with n-vertices.
+        /// </summary>
+        /// <param name="vertices"></param>
+        /// <param name="centerVertex"></param>
+        /// <returns></returns>
+        public static Mesh Circle(int vertices, bool centerVertex = false)
+            => CircleBuilder(vertices, centerVertex).Build(BufferUsageHint.StaticDraw);
 
-        public static Mesh Plane(int xDivisions, int yDivisions)
+        private static MeshBuilder PlaneBuilder(int xDivisions, int yDivisions)
         {
-            if(xDivisions < 0 || yDivisions < 0)
+            if (xDivisions < 0 || yDivisions < 0)
                 throw new Exception("Trying to generate plane mesh failed! " +
                     "(MeshGeneration.Plane(a, b) requires (a, b) ≥ 0)");
 
-            Mesh plane = new Mesh();
+            MeshBuilder plane = new MeshBuilder();
 
             Vertex[] vertices = new Vertex[(xDivisions + 2) * (yDivisions + 2)];
             int[] indices = new int[(xDivisions + 1) * (yDivisions + 1) * 6];
@@ -200,37 +240,45 @@ namespace _3D_Renderer._Generation
             {
                 for (int x = 0; x < xDivisions + 1; x++)
                 {
-                    indices[(x + (xDivisions + 1) * y) * 6    ] = x     + (xDivisions + 2) * y;
-                    indices[(x + (xDivisions + 1) * y) * 6 + 1] = x     + (xDivisions + 2) * (y + 1);
+                    indices[(x + (xDivisions + 1) * y) * 6] = x + (xDivisions + 2) * y;
+                    indices[(x + (xDivisions + 1) * y) * 6 + 1] = x + (xDivisions + 2) * (y + 1);
                     indices[(x + (xDivisions + 1) * y) * 6 + 2] = 1 + x + (xDivisions + 2) * y;
                     indices[(x + (xDivisions + 1) * y) * 6 + 3] = 1 + x + (xDivisions + 2) * y;
-                    indices[(x + (xDivisions + 1) * y) * 6 + 4] = x     + (xDivisions + 2) * (y + 1);
+                    indices[(x + (xDivisions + 1) * y) * 6 + 4] = x + (xDivisions + 2) * (y + 1);
                     indices[(x + (xDivisions + 1) * y) * 6 + 5] = 1 + x + (xDivisions + 2) * (y + 1);
                 }
             }
             #endregion
-            plane.SetVertices(vertices, BufferUsageHint.StaticDraw);
-            plane.SetIndices(indices, BufferUsageHint.StaticDraw);
+            plane.SetVertices(vertices);
+            plane.SetIndices(indices);
 
             return plane;
         }
+        /// <summary>
+        /// Generates a plane with subdivisions on the x- and y-axis.
+        /// </summary>
+        /// <param name="xDivisions"></param>
+        /// <param name="yDivisions"></param>
+        /// <returns></returns>
+        public static Mesh Plane(int xDivisions, int yDivisions)
+            => PlaneBuilder(xDivisions, yDivisions).Build(BufferUsageHint.StaticDraw);
 
-        public static Mesh Cube(int divisions)
+        private static MeshBuilder CubeBuilder(int divisions)
         {
-            Mesh bottom = Plane(divisions, divisions);
+            MeshBuilder bottom = PlaneBuilder(divisions, divisions);
             bottom.FlipFacesUVsNormals();
             bottom.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, -0.5f, 0));
-            Mesh top = Plane(divisions, divisions);
+            MeshBuilder top = PlaneBuilder(divisions, divisions);
             top.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, 0.5f, 0));
-            Mesh combinedSideMesh = new Mesh();
+            MeshBuilder combinedSideMesh = new MeshBuilder();
             Matrix4 sideTranslation = Matrix4.CreateTranslation(0, 0.5f, 0);
             Matrix4 sideRotation = Matrix4.CreateFromQuaternion(
                 Quaternion.FromEulerAngles(MathF.PI / 2, 0, 0));
             Matrix4 sideRotationOffset = Matrix4.CreateFromQuaternion(
                 Quaternion.FromEulerAngles(0, MathF.PI / 2, 0));
-            for(int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
-                Mesh side = Plane(divisions, divisions);
+                MeshBuilder side = PlaneBuilder(divisions, divisions);
                 side.PermanentlyTransformVertices(sideTranslation * sideRotation);
                 side.PermanentlyTransformNormals(sideRotation);
                 sideRotation *= sideRotationOffset;
@@ -239,65 +287,55 @@ namespace _3D_Renderer._Generation
 
             return bottom + top + combinedSideMesh;
         }
+        /// <summary>
+        /// Generates a cube with hard edges and subdivisions on the sides.
+        /// </summary>
+        /// <param name="divisions"></param>
+        /// <returns></returns>
+        public static Mesh Cube(int divisions)
+            => CubeBuilder(divisions).Build(BufferUsageHint.StaticDraw);
 
-        public static Mesh CubeSphere(int divisions, float sphericalNess = 1)
+        private static MeshBuilder CubeSphereBuilder(int divisions, float sphericalNess = 1)
         {
-            Mesh bottom = Plane(divisions, divisions);
-            /*bottom.PermanentlyTransformVertices(Matrix4.CreateFromQuaternion(
-                Quaternion.FromEulerAngles(MathF.PI, 0, 0)));*/
-            bottom.FlipFaces();
-            bottom.FlipUVs();
-            bottom.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, -0.5f, 0));
-            bottom.PermanentlyTransformNormals(Matrix4.CreateScale(1, -1, 1));
-            Mesh top = Plane(divisions, divisions);
-            top.PermanentlyTransformVertices(Matrix4.CreateTranslation(0, 0.5f, 0));
-            Mesh combinedSideMesh = new Mesh();
-            Matrix4 sideTranslation = Matrix4.CreateTranslation(0, 0.5f, 0);
-            Matrix4 sideRotation = Matrix4.CreateFromQuaternion(
-                Quaternion.FromEulerAngles(MathF.PI / 2, 0, 0));
-            Matrix4 sideRotationOffset = Matrix4.CreateFromQuaternion(
-                Quaternion.FromEulerAngles(0, MathF.PI / 2, 0));
-            for (int i = 0; i < 4; i++)
-            {
-                Mesh side = Plane(divisions, divisions);
-                side.PermanentlyTransformVertices(sideTranslation * sideRotation);
-                side.PermanentlyTransformNormals(sideRotation);
-                sideRotation *= sideRotationOffset;
-                combinedSideMesh += side;
-            }
-            Mesh combinedMesh = bottom + top + combinedSideMesh;
+            MeshBuilder combinedMesh = CubeBuilder(divisions);
             Vertex[] combinedVertices = combinedMesh.GetVertices();
-            Vertex[] modifiedVertices = new Vertex[combinedVertices.Length];
             for (int i = 0; i < combinedVertices.Length; i++)
             {
                 Vector3 normalizedPosition = combinedVertices[i].vertexPosition.Normalized();
                 Vector3 finalizedPosition = Vector3.Lerp(combinedVertices[i].vertexPosition,
                     normalizedPosition, sphericalNess);
 
-                modifiedVertices[i] = new Vertex(finalizedPosition,
+                combinedVertices[i] = new Vertex(finalizedPosition,
                     finalizedPosition, combinedVertices[i].textureCoordinate);
             }
-            combinedMesh.SetVertices(modifiedVertices, BufferUsageHint.StaticDraw);
 
             return combinedMesh;
         }
+        /// <summary>
+        /// Generates a cube with hard edges and then normalizes the distance to the center.
+        /// </summary>
+        /// <param name="divisions"></param>
+        /// <param name="sphericalNess"></param>
+        /// <returns></returns>
+        public static Mesh CubeSphere(int divisions, float sphericalNess = 1)
+            => CubeSphereBuilder(divisions, sphericalNess).Build(BufferUsageHint.StaticDraw);
 
-        public static Mesh[] Text(int fontHandle, string text, out float lengthOfText)
+        private static MeshBuilder[] TextBuilder(int fontHandle, string text, out float lengthOfText)
         {
             Font font = FontLoader.GetFont(fontHandle);
             char[] characters = text.ToCharArray();
-            Mesh[] textMesh = new Mesh[font.textureAtlasHandle.Length];
+            MeshBuilder[] textMesh = new MeshBuilder[font.textureAtlasHandle.Length];
             float xCursor = 0;
             for (int i = 0; i < characters.Length; i++)
             {
                 FontCharacter characterInfo = font.GetCharacterInfo(characters[i]);
                 int meshIndex = characterInfo.page;
 
-                Mesh characterQuad = FontQuad(
-                    (characterInfo.xOffset + xCursor) / (float)font.width, 
+                MeshBuilder characterQuad = FontQuadBuilder(
+                    (characterInfo.xOffset + xCursor) / (float)font.width,
                     characterInfo.yOffset / (float)font.height,
-                    characterInfo.width / (float)font.width, characterInfo.height / (float)font.height, 
-                    characterInfo.x / (float)font.width,     characterInfo.y / (float)font.height);
+                    characterInfo.width / (float)font.width, characterInfo.height / (float)font.height,
+                    characterInfo.x / (float)font.width, characterInfo.y / (float)font.height);
                 xCursor += characterInfo.xAdvance;
 
                 if (textMesh[meshIndex] == null)
@@ -308,12 +346,89 @@ namespace _3D_Renderer._Generation
                 textMesh[meshIndex] += characterQuad;
             }
             lengthOfText = xCursor / font.width;
-            for(int i = 0; i < textMesh.Length; i++) { 
+            for (int i = 0; i < textMesh.Length; i++)
+            {
                 textMesh[i] -= new Vector3(lengthOfText / 2f, 0, 0);
                 textMesh[i].name = text;
             }
 
             return textMesh;
+        }
+        /// <summary>
+        /// Generates text-meshes with a certain font.
+        /// </summary>
+        /// <param name="fontHandle"></param>
+        /// <param name="text"></param>
+        /// <param name="lengthOfText"></param>
+        /// <returns></returns>
+        public static Mesh[] Text(int fontHandle, string text, out float lengthOfText)
+        {
+            MeshBuilder[] builders = TextBuilder(fontHandle, text, out lengthOfText);
+            Mesh[] meshes = new Mesh[builders.Length];
+            for(int i = 0; i < builders.Length; i++)
+            {
+                meshes[i] = builders[i].Build(BufferUsageHint.StaticDraw);
+            }
+            return meshes;
+        }
+
+        public static Mesh UVSphere(int rows, int columns)
+        {
+            if(rows < 1 || columns < 3)
+            {
+                Debug.LogError("UV sphere must have at least 1 row and 3 columns!");
+                return null;
+            }
+
+            MeshBuilder combinedMesh = new MeshBuilder();
+            //Generates the vertices:
+            List<Vertex> vertices = new List<Vertex>()
+            {
+                new Vertex(new Vector3(0, 1, 0))
+            };
+            for (int i = 0; i < rows; i++)
+            {
+                float radian = MathF.PI * (i + 1f) / (rows + 1f);
+                vertices.AddRange((CircleBuilder(columns) * MathF.Sin(radian) 
+                    + new Vector3(0, MathF.Cos(radian), 0)).GetVertices());
+            }
+            vertices.Add(new Vertex(new Vector3(0, -1, 0)));
+
+            //Generate sides (not top and bottom)
+            List<int> indices = new List<int>();
+            for(int r = 0; r < rows - 1; r++) { 
+                for(int c = 0; c < columns; c++)
+                {
+                    indices.AddRange([
+                        1 + c + columns + r * columns,
+                        1 + c + r * columns,
+                        1 + (c + 1) % columns + r * columns,
+                    ]);
+                    indices.AddRange([
+                        1 + (c + 1) % columns + columns + r * columns,
+                        1 + c + columns + r * columns,
+                        1 + (c + 1) % columns + r * columns,
+                    ]);
+                }
+            }
+            //Now connect top and bottom
+            for(int i = 0; i < columns; i++)
+            {
+                indices.AddRange([
+                    0,
+                    1 + (i + 1) % columns,
+                    1 + i,
+                ]);
+                indices.AddRange([
+                    vertices.Count - 1,
+                    1 + columns * (rows - 1) + i,
+                    1 + columns * (rows - 1) + (i + 1) % columns,
+                ]);
+            }
+
+            combinedMesh.SetIndices(indices.ToArray());
+            combinedMesh.SetVertices(vertices.ToArray());
+            return combinedMesh.Build(BufferUsageHint.StaticDraw);
         }
         #endregion
     }

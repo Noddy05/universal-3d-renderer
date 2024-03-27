@@ -142,7 +142,18 @@ namespace _3D_Renderer._Rendering
 
             window!.renderStats.NewDrawCall(0);
         }
-        private static void RenderWireframeObject(GameObject renderable, Matrix4 transformMatrix, 
+        private static void RenderWireframeObject(GameObject renderable, Matrix4 transformMatrix,
+            Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
+        {
+            ((UnlitMaterial)renderable.GetMaterial()).color = color;
+            int tris = renderable.ApplyRenderable(transformMatrix, projectionMatrix, cameraMatrix);
+
+            GL.DrawElements(PrimitiveType.Lines, tris,
+                DrawElementsType.UnsignedInt, 0);
+
+            window!.renderStats.NewDrawCall(0);
+        }
+        private static void RenderWireframeVertices(GameObject renderable, Matrix4 transformMatrix,
             Matrix4 projectionMatrix, Matrix4 cameraMatrix, Color4 color)
         {
             ((UnlitMaterial)renderable.GetMaterial()).color = color;

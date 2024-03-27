@@ -37,6 +37,8 @@ namespace _3D_Renderer._GLObjects._UBO._UniformBlocks
                 data.Add(directionalLights[i].GetLightStrength());
                 data.AddRange(VBO.ToFloatArray(directionalLights[i].GetLightCastFromDirection()));
                 data.Add(0); //dummy variable
+                data.AddRange(VBO.ToFloatArray(directionalLights[i].CalculateRotationMatrix() *
+                    directionalLights[i].projectionMatrix));
             }
             dataToBind = data.ToArray();
         }

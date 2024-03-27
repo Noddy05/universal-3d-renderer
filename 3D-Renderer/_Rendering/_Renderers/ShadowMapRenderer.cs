@@ -50,17 +50,18 @@ namespace _3D_Renderer._Rendering._Renderers
 
         public void RenderCollection(string collection, DirectionalLight directionalLight)
         {
-            float distance = 100;
+            float distance = 0f;
             float width  = 50;
             float height = 50 * window.Size.Y / (float)window.Size.X;
 
-            projectionMatrix = Matrix4.CreateOrthographic(width, height, 0f, distance * 2f);
+            projectionMatrix = Matrix4.CreateOrthographic(width, height, 0.1f, 100f);
+            directionalLight.projectionMatrix = projectionMatrix;
             lightMatrix = directionalLight.CalculateRotationMatrix()
                 * Matrix4.CreateTranslation(-Vector3.UnitZ * distance);
             //lightMatrix = Matrix4.Identity;
 
             //Should have frustum culling
-            GL.Disable(EnableCap.CullFace);
+            GL.Enable(EnableCap.CullFace);
             foreach (Renderable renderable in SceneHierarchy.GetCollection(collection))
             {
                 Mesh mesh = renderable.GetMesh()!;
@@ -95,7 +96,6 @@ namespace _3D_Renderer._Rendering._Renderers
 
                 window.renderStats.NewDrawCall(tris * instanceCount);
             }
-            GL.Enable(EnableCap.CullFace);
         }
 
         public void ApplyRenderable(Mesh mesh, Matrix4 projection, Matrix4 transformation)

@@ -40,7 +40,7 @@ namespace _3D_Renderer
                 ClientSize = new Vector2i(1920, 1080),
                 StartVisible = false,
                 Title = "Game Window",
-                NumberOfSamples = 1,
+                NumberOfSamples = 8,
             })
         {
             CenterWindow();
@@ -227,12 +227,12 @@ namespace _3D_Renderer
             int colorTextureHandle = TextureLoader.LoadTexture(
                 @"../../../_Assets/_Debug/_Textures/colors.png");
             Material colorMaterial = new DiffuseMaterial(Color4.White, colorTextureHandle);
-            Mesh thirdMesh = MeshGeneration.Circle(15);
+            Mesh thirdMesh = MeshGeneration.UVSphere(30, 15);
             GameObject quad = temp.Clone();
             quad.SetMaterial(colorMaterial);
             quad.SetMesh(thirdMesh);
             quad.showBoundingBox = true;
-            quad.transform.position = new Vector3(0, 5f, 0);
+            quad.transform.position = new Vector3(0, -5f, 0);
             quad.showBoundingBox = false;
             SceneHierarchy.AddRenderable("Scene", quad);
 
@@ -241,7 +241,6 @@ namespace _3D_Renderer
             temp2.transform.position = new Vector3(0, 0, 5f);
             temp2.SetMesh(secondMesh);
             SceneHierarchy.AddRenderable("Scene", temp2);
-
 
             int candleTextureHandle = TextureLoader.LoadTexture(
                 @"../../../_Assets/_Debug/_Textures/colors.png");
@@ -270,15 +269,6 @@ namespace _3D_Renderer
             }
             candle.GetMesh()!.CreateInstanceVBO(matrices);
             SceneHierarchy.AddRenderable("Scene", candle);
-
-            instanceable = gameObject.Clone();
-            instanceable.SetMesh(secondMesh);
-            instanceable.transform.position = Vector3.Zero;
-            instanceable.transform.rotation = Vector3.Zero;
-            instanceable.transform.scale = Vector3.One;
-            Material particleMaterial = new ParticleMaterial(Color4.White);
-            instanceable.SetMaterial(particleMaterial);
-
 
             #endregion
 
@@ -361,11 +351,12 @@ namespace _3D_Renderer
             base.OnUnload();
         }
 
-        [SaveOnClose]
         public double timeSinceStartup = 0;
+        public int framesSinceStartup;
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             timeSinceStartup += args.Time;
+            framesSinceStartup++;
             //temp.transform.rotation.Y = (float)timeSinceStartup * 0.45f;
             //candle.transform.rotation.Y = (float)timeSinceStartup * 0.6f;
 
@@ -419,6 +410,14 @@ namespace _3D_Renderer
             GL.Disable(EnableCap.DepthTest);
             uiRenderer.RenderCollection("Canvas", editorCamera,
                 Matrix4.Identity, editorCamera.CameraMatrix());
+
+            int increment = 500;
+            if(framesSinceStartup % increment == 1)
+            {
+                Mesh secondMesh = MeshGeneration.CubeSphere(1 + framesSinceStartup / increment);
+                temp2.SetMesh(secondMesh);
+                ((DiffuseMaterial)temp2.GetMaterial()).useNormalMap = false;
+            }
 
             editorUI.DrawOrientation();
 

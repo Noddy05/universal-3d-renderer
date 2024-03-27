@@ -1,5 +1,6 @@
 #version 420 core
 
+in vec4 position;
 in vec3 vPosition;
 in vec3 cameraPosition;
 
@@ -20,6 +21,7 @@ uniform float reflectivity = 1;
 uniform float specularHighlightDamper = 15;
 uniform vec4 color;
 in float vUseNormalMap;
+in vec4 lightSpacePositions[16];
 
 
 layout(std140, binding = 0) uniform uShadowInformation {
@@ -33,6 +35,7 @@ struct DirectionalLight {
 	float lightStrength;
 	vec3 lightFromDirection;
 	float _DUMMY_;
+	mat4 lightMatrix;
 };
 layout(std140, binding = 1) uniform uDirectionalLight {
 	DirectionalLight[16] lights;
@@ -74,10 +77,6 @@ void main(){
     vec4 shadowColor = vec4(shadow_info.shadowColor, 1);
     float minLight = shadow_info.minLight;
 
-    //Calculate specular highlights:
-    vec3 refractionDirection = refract(-normalize(toCamera), normalize(normal), 1/1.33);
-    vec3 reflectedDirection = reflect(-normalize(toCamera), normalize(normal));
-
     //Combine texture and color
     vec4 sampledTexture = texture(textureSampler, vTexCoords);
     vec4 unlitColor = color 
@@ -90,11 +89,23 @@ void main(){
     float shadowColorStrength = shadowColorFalloff * pow(minLight / shadowColorFalloff, 
         lightSummedStrength/minLight);
 
+    float distanceToLight = texture(shadowSampler, (lightSpacePositions[0].xy + 1) / 2).r;
+    if(lightSpacePositions[0].z > distanceToLight){
+        unlitColor = vec4(0);
+    }
+
     fragmentColor = unlitColor * mix(sumLights, shadowColor, shadowColorStrength);
-        
-    //Calculate cubemap reflectionColor
+    //fragmentColor = vec4(lightSpacePositions[0].w, 0, 0, 0);
+    //fragmentColor = vec4(1-distanceToLight, 0, 0, 0);
+    //fragmentColor = vec4((lightSpacePositions[0].xy + 1) / 2, 0, 0);
+
+    //Calculate cubemap reflectionColor 
+    /*
+    vec3 refractionDirection = refract(-normalize(toCamera), normalize(normal), 1/1.33);
+    vec3 reflectedDirection = reflect(-normalize(toCamera), normalize(normal));
     vec4 refractedColor = texture(reflectionSampler, refractionDirection);
     vec4 reflectedColor = texture(reflectionSampler, reflectedDirection);
+    */
     //fragmentColor = mix(fragmentColor, refractedColor, cubemapRefractivity * lightStrengthClamped);
     //fragmentColor = mix(fragmentColor, reflectedColor, cubemapReflectivity * lightStrengthClamped);
 }

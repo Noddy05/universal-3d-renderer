@@ -25,7 +25,6 @@ namespace _3D_Renderer._Renderable._Mesh
         public void SetIndices(int[] indices) => this.indices = indices;
 
         #region Modification
-
         #region Flipping
 
         public void FlipFacesUVsNormals()
@@ -91,6 +90,16 @@ namespace _3D_Renderer._Renderable._Mesh
             a.PermanentlyTransformVertices(Matrix4.CreateTranslation(offset));
             return a;
         }
+        public static MeshBuilder operator *(MeshBuilder a, Vector3 newScale)
+        {
+            a.PermanentlyTransformVertices(Matrix4.CreateScale(newScale));
+            return a;
+        }
+        public static MeshBuilder operator *(MeshBuilder a, float newScale)
+        {
+            a.PermanentlyTransformVertices(Matrix4.CreateScale(newScale));
+            return a;
+        }
         public static MeshBuilder operator -(MeshBuilder a, Vector3 offset)
         {
             a.PermanentlyTransformVertices(Matrix4.CreateTranslation(-offset));
@@ -101,7 +110,9 @@ namespace _3D_Renderer._Renderable._Mesh
         {
             //Cache info:
             Vertex[] aVerts = a.vertices;
+            a.vertices = new Vertex[aVerts.Length + b.vertices.Length];
             int[] aTris = a.indices;
+            a.indices = new int[aTris.Length + b.indices.Length];
 
             for (int i = 0; i < aVerts.Length; i++)
             {
@@ -124,11 +135,11 @@ namespace _3D_Renderer._Renderable._Mesh
         }
         #endregion
 
-        public Mesh Build()
+        public Mesh Build(BufferUsageHint hint)
         {
             Mesh outputMesh = new Mesh();
-            outputMesh.SetVertices(vertices, BufferUsageHint.StaticDraw);
-            outputMesh.SetIndices(indices, BufferUsageHint.StaticDraw);
+            outputMesh.SetVertices(vertices, hint);
+            outputMesh.SetIndices(indices, hint);
             outputMesh.name = name;
 
             return outputMesh;

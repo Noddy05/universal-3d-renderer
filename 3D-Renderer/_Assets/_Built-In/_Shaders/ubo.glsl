@@ -12,6 +12,7 @@ struct DirectionalLight {
 	float lightStrength;
 	vec3 lightFromDirection;
 	float _DUMMY_;
+	mat4 lightMatrix;
 };
 layout(std140, binding = 1) uniform uDirectionalLight {
 	vec3 DirectionalLight[16];

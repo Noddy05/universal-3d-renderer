@@ -305,6 +305,16 @@ namespace _3D_Renderer._Renderable._Mesh
             a.PermanentlyTransformVertices(Matrix4.CreateTranslation(offset));
             return a;
         }
+        public static Mesh operator *(Mesh a, Vector3 newScale)
+        {
+            a.PermanentlyTransformVertices(Matrix4.CreateScale(newScale));
+            return a;
+        }
+        public static Mesh operator *(Mesh a, float newScale)
+        {
+            a.PermanentlyTransformVertices(Matrix4.CreateScale(newScale));
+            return a;
+        }
         public static Mesh operator -(Mesh a, Vector3 offset)
         {
             a.PermanentlyTransformVertices(Matrix4.CreateTranslation(-offset));

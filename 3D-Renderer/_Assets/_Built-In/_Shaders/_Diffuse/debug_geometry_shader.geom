@@ -8,21 +8,25 @@ layout (triangle_strip, max_vertices = 3) out;
 
 out vec3 vPosition;
 out vec3 cameraPosition;
+out vec4 position;
 
 out vec2 vTexCoords;
 out vec3 vNormal;
 out float vUseNormalMap;
+out mat4 lightMatrix;
 
 struct DirectionalLight {
 	vec3 lightColor;
 	float lightStrength;
 	vec3 lightFromDirection;
 	float _DUMMY_;
+	mat4 lightMatrix;
 };
 out vec3 lightDirections[16];
 layout(std140, binding = 1) uniform gDirectionalLight {
 	DirectionalLight[16] directionalLights;
 } directional_light;
+out vec4 lightSpacePositions[16];
 
 in DATA {
 	vec2 vTexCoords;
@@ -68,16 +72,22 @@ void main(){
 		}
 	}
 
+
 	//Do nothing:
 	vUseNormalMap = useNormalMap;
 	for(int i = 0; i < 3; i++){
 		vec4 finalPosition = data_in[i].projectionMatrix * 
 			data_in[i].cameraMatrix * gl_in[i].gl_Position;
-		gl_Position = finalPosition;
+		position = finalPosition;
 		vTexCoords = data_in[i].vTexCoords;
 		vPosition = gl_in[i].gl_Position.xyz;
 		cameraPosition = data_in[i].cameraPosition;
 		vNormal = data_in[i].vNormal;
+		for(int i = 0; i < 16; i++){
+			lightSpacePositions[i] = directional_light.directionalLights[0].lightMatrix 
+				* gl_in[i].gl_Position;
+		}
+		gl_Position = finalPosition;
 
 		//Done with this vertex: 
 		EmitVertex();

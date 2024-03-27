@@ -28,6 +28,7 @@ struct DirectionalLight {
 	float lightStrength;
 	vec3 lightFromDirection;
 	float _DUMMY_;
+	mat4 lightMatrix;
 };
 
 void main() {
