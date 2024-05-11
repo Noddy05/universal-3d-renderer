@@ -1,4 +1,4 @@
-# Editor auto save at 27-03-2024 14:18:33
-"EditorCamera" FreeCamera position 5,415382;-8,302955;7,6391735
-"EditorCamera" FreeCamera rotation 0,65794593;-3,6506214;0
+# Editor auto save at 11-05-2024 19:55:12
+"EditorCamera" FreeCamera position -9,770262;-7,7365217;-11,900474
+"EditorCamera" FreeCamera rotation 0,31045035;5,4943137;0
 "WindowState" Window testCamera 0;1;0
